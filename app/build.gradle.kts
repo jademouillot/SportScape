@@ -1,16 +1,9 @@
 plugins {
-    alias(libs.plugins.androidApplication)
+    //alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     // ...
-
-    // Add the dependency for the Google services Gradle plugin
-    //id("com.google.gms.google-services") version "4.4.1" apply false
-
     id("com.android.application")
-
-    // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
-
 }
 
 android {
@@ -77,14 +70,44 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation(platform(libs.firebase.bom))
 
 
     // TODO: Add the dependencies for Firebase products you want to use
     // When using the BoM, don't specify versions in Firebase dependencies
-    implementation("com.google.firebase:firebase-analytics")
 
+    // Firebase Analytics
+    //noinspection UseTomlInstead
+    implementation("com.google.firebase:firebase-analytics-ktx")
 
-    // Add the dependencies for any other desired Firebase products
-    // https://firebase.google.com/docs/android/setup#available-libraries
+    // Firebase Authentication
+    //noinspection UseTomlInstead
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    // Cloud Firestore
+    //noinspection UseTomlInstead
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Realtime Database
+    //noinspection UseTomlInstead
+    implementation("com.google.firebase:firebase-database-ktx")
+
+    // Firebase Cloud Messaging (FCM)
+    //noinspection UseTomlInstead
+    implementation("com.google.firebase:firebase-messaging-ktx")
+
+    // Firebase Storage
+    //noinspection UseTomlInstead
+    implementation("com.google.firebase:firebase-storage-ktx")
+
+    // Firebase Crashlytics
+    //noinspection UseTomlInstead
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
+
+    // Firebase Remote Config
+    //noinspection UseTomlInstead
+    implementation("com.google.firebase:firebase-config-ktx")
+
+    // (Optional) Add the dependencies for any other Firebase products you want to use
+    // Check the Firebase documentation for the latest versions and additional services: https://firebase.google.com/docs/android/setup#available-libraries
 }
