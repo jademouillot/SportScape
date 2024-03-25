@@ -53,7 +53,7 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.androidx.material)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -100,9 +100,7 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("com.google.firebase:firebase-storage-ktx")
 
-    // Firebase Crashlytics
-    //noinspection UseTomlInstead
-    implementation("com.google.firebase:firebase-crashlytics-ktx")
+
 
     // Firebase Remote Config
     //noinspection UseTomlInstead
