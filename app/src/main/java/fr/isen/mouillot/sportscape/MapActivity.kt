@@ -1,48 +1,36 @@
 package fr.isen.mouillot.sportscape
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 
-class MapActivity : ComponentActivity() {
+class MapActivity : AppCompatActivity(), OnMapReadyCallback {
+    private lateinit var mMap: GoogleMap // Corrigé: Déclaré mMap correctement
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
-        // Le reste de votre code pour initialiser la carte
-    setContent {
-            SportScapeTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Greeting2("Android")
-                }
-            }
-        }
+
+        // Obtenez le SupportMapFragment et soyez notifié lorsque la carte est prête à être utilisée.
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment // Corrigé: Ajouté une vérification de type sécurisée
+        mapFragment?.getMapAsync(this)
     }
-}
 
-@Composable
-fun Greeting2(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview2() {
-    SportScapeTheme {
-        Greeting2("Android")
+        // Ajoutez un marqueur à Singapore, et déplacez la caméra.
+        val singapore = LatLng(1.35, 103.87)
+        mMap.addMarker(
+            MarkerOptions()
+                .position(singapore)
+                .title("Marker in Singapore")
+        )
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(singapore))
     }
 }
