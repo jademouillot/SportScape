@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SportScape</string>
+    <string name="title_activity_new_publication">NewPublication</string>
 </resources>
