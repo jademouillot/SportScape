@@ -1,6 +1,7 @@
 package fr.isen.mouillot.sportscape
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Arrangement
@@ -17,12 +18,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import android.Manifest
+
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
@@ -31,15 +36,34 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
 
-        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
-        mapFragment?.getMapAsync(this)
-
         // Configure the ComposeView to display the ActionBar
         val actionBarComposeView = findViewById<ComposeView>(R.id.actionBarComposeView)
         actionBarComposeView.setContent {
             ActionMapBar(this) { navigateClass ->
                 val intent = Intent(this, navigateClass)
                 startActivity(intent)
+            }
+        }
+        // Configuration initiale et demande de permissions
+        // Votre code actuel ici
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), PERMISSION_REQUEST_CODE)
+        } else {
+            val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
+            mapFragment?.getMapAsync(this)
+        }
+    }
+
+    // Assurez-vous de surcharger onRequestPermissionsResult pour gérer le résultat de la demande de permission
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Si la permission est accordée, vous pouvez appeler getMapAsync ici
+                val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
+                mapFragment?.getMapAsync(this)
+            } else {
+                // Gérer le cas où la permission est refusée
             }
         }
     }
@@ -54,7 +78,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.setMaxZoomPreference(20f)
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.uiSettings.isZoomGesturesEnabled = true
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mMap.isMyLocationEnabled = true
+            mMap.uiSettings.isMyLocationButtonEnabled = true
+        }
     }
+
 
     @Composable
     fun ActionMapBar(context: AppCompatActivity, navigateFunction: (Class<*>) -> Unit) {
@@ -98,5 +127,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 Icon(painter = painterResource(id = R.drawable.profile), contentDescription = "Profile", tint = Color(0,0,255), modifier = Modifier.size(24.dp))
             }
         }
+    }
+    companion object {
+        private const val PERMISSION_REQUEST_CODE = 100
     }
 }
