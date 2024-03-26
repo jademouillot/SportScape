@@ -41,6 +41,8 @@ import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
 
 class RegisterActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
+    //val database
+
     private lateinit var takePicture: ActivityResultLauncher<Void?>
 
     override fun onCreate(savedInstanceState: Bundle?) {
