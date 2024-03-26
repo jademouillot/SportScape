@@ -1,6 +1,6 @@
 package fr.isen.mouillot.sportscape
 
-import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -10,7 +10,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,146 +28,229 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig.TAG
+import com.google.firebase.storage.FirebaseStorage
 import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
+import java.util.UUID
 
 class RegisterActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
-    //val database
-    //hh
 
-    private lateinit var takePicture: ActivityResultLauncher<Void?>
+    //private lateinit var selectImage: ActivityResultLauncher<String>
+    //private lateinit var pickImageLauncher: ActivityResultLauncher<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         auth = FirebaseAuth.getInstance()
 
-        takePicture = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-            // Handle the bitmap
-        }
+//        pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+//            // Handle the Uri
+//            uri?.let {
+//                uploadImageToFirebaseStorage(it, this) { imageUrl ->
+//                    // Store the image URL in the database
+//                    postdataUser(imageUrl)
+//                    // Now you have the imageUrl which is the URL of the uploaded image
+//                    Log.d(TAG, "Image URL: $imageUrl")
+//                }
+//            }
+//        }
         setContent {
             SportScapeTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
                     var username by remember { mutableStateOf("") }
                     var photoUrl by remember { mutableStateOf("") }
                     val errorMessage = remember { mutableStateOf("") }
 
-                    RegisterScreen(currentUser = remember { mutableStateOf(null) }, register = { email, password, currentUser ->
-                        Register(email, password, username, photoUrl, currentUser, errorMessage)
-                    }, takePicture = takePicture)
+                    RegisterScreen(
+                        currentUser = remember { mutableStateOf(null) },
+                        register = { email, password, username, photoUrl ->
+                            Register(email, password, username, photoUrl)
+                            //postdataUser("email", "password", "username", "photoUrl")
+                            startActivity(MainActivity::class.java)
+                        },
+                        context = LocalContext.current,
+                        startActivity = this::startActivity
+
+                    )
                 }
+
             }
         }
     }
+    fun uploadImageToFirebaseStorage(
+        imageUri: Uri, context: Context, onImageUploaded: (String) -> Unit
+    ) {
+        val storageRef =
+            FirebaseStorage.getInstance().reference.child("images/${UUID.randomUUID()}")
+        storageRef.putFile(imageUri).continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    Log.d("Upload", "Image Upload Failed: ${it.message}")
+                    throw it
+                }
+            }
+            storageRef.downloadUrl
+        }.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val downloadUri = task.result.toString()
+                Log.d("Upload", "Image Upload Successful: $downloadUri")
+                onImageUploaded(downloadUri)
+            } else {
+                Toast.makeText(
+                    context, "Upload failed: ${task.exception?.message}", Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
     private fun startActivity(activityClass: Class<*>) {
         val intent = Intent(this, activityClass)
         startActivity(intent)
     }
+
     private fun Register(
         email: String,
         password: String,
         username: String,
         photoUrl: String,
-        currentUser: MutableState<FirebaseUser?>,
-        errorMessage: MutableState<String>
     ) {
-        if (password.isEmpty() || username.isEmpty() || photoUrl.isEmpty()) {
-            errorMessage.value = "All fields must be filled."
+        if (password.isEmpty() || username.isEmpty()) {
+            Log.d("Baptiste", "Veuillez remplir les champs.")
             return
         }
+        Log.d("Baptiste", "createUserWithEmail:$email")
+        val database =
+            FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+        val myRef = database.getReference("tmp").push()
 
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
-                    Log.d(TAG, "createUserWithEmail:success")
-                    val user = auth.currentUser
-                    val profileUpdates = UserProfileChangeRequest.Builder()
-                        .setDisplayName(username)
-                        .setPhotoUri(Uri.parse(photoUrl))
-                        .build()
+        val user = hashMapOf(
+            "email" to email, "username" to username, "photoUrl" to photoUrl
+        )
 
-                    user?.updateProfile(profileUpdates)?.addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            Log.d(TAG, "User profile updated.")
-                            currentUser.value = user
-                            startActivity(MainActivity::class.java)
-                            errorMessage.value = "Vous êtes bien enregistré."
-                        }
-                    }
+        myRef.setValue(user)
+
+        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this) { task ->
+            if (task.isSuccessful) {
+                Log.d("Baptiste", "createUserWithEmail:success")
+            } else {
+                Log.w(TAG, "createUserWithEmail:failure", task.exception)
+                if (task.exception is FirebaseAuthUserCollisionException) {
+                    Log.d("Baptiste", "Account already exists.")
                 } else {
-                    // If sign in fails, display a message to the user.
-                    Log.w(TAG, "createUserWithEmail:failure", task.exception)
-                    if (task.exception is FirebaseAuthUserCollisionException) {
-                        errorMessage.value = "Account already exists."
-                    } else {
-                        errorMessage.value = "Authentication failed."
-                    }
+                    Log.d("Baptiste", "Authentication failed.")
                 }
             }
+        }
+    }
+
+
+    fun postdata() {
+        val database =
+            FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+        val myRef = database.getReference("tmp").push().setValue("Hello, Worldddd!")
+
+        //myRef.setValue("Hello, World!")
+
+        // Pour lire des données
+
+    }
+
+fun postdataUser(imageUrl: String) {
+    val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+    val myRef = database.getReference("users").push()
+
+    val user = hashMapOf(
+        "imageUrl" to imageUrl
+    )
+
+    myRef.setValue(user)
+        .addOnSuccessListener {
+            Log.d(TAG, "User saved successfully.")
+        }
+        .addOnFailureListener { e ->
+            Log.w(TAG, "Failed to save user.", e)
+        }
+}
+
+
+
+    @Composable
+    fun RegisterScreen(
+        currentUser: MutableState<FirebaseUser?>,
+        register: (String, String, String, String) -> Unit,
+
+        startActivity: (Class<*>) -> Unit,
+        context: Context
+    ) {
+        var email by remember { mutableStateOf("") }
+        var password by remember { mutableStateOf("") }
+        var username by remember { mutableStateOf("") }
+        var photoUrl by remember { mutableStateOf("") }
+        var errorMessage by remember { mutableStateOf("") }
+
+
+
+        Column(modifier = Modifier.padding(16.dp)) {
+            TextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            TextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            TextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+//            Button(onClick = { pickImageLauncher.launch("image/*") }) {
+//                Text("Pick Image")
+//            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = {
+                if (email.isEmpty() || password.isEmpty() || username.isEmpty()) {
+                    errorMessage = "Veuillez remplir les champs."
+                    Toast.makeText(
+                        context, errorMessage, Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    register(email, password, username, photoUrl)
+                }
+            }) {
+                Text("Create account")
+            }
+
+        }
+
     }
 }
 
-@Composable
-fun RegisterScreen(currentUser: MutableState<FirebaseUser?>, register: (String, String, MutableState<FirebaseUser?>) -> Unit, takePicture: ActivityResultLauncher<Void?>){
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
-    var photoUrl by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Username") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { takePicture.launch(null) }) {
-            Text("Take Photo")
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { register(email, password, currentUser) }) {
-            Text("Create account")
-        }
-        if (errorMessage.isNotEmpty()) {
-            Text(text = errorMessage, color = Color.Red)
-        }
-    }
-}
 
 @Composable
 fun Greeting3(name: String, modifier: Modifier = Modifier) {
     Text(
-        text = "Hello $name!",
-        modifier = modifier
+        text = "Hello $name!", modifier = modifier
     )
 }
 

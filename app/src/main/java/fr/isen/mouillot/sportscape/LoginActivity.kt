@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,9 +26,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
+import androidx.compose.ui.unit.sp
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -56,7 +60,7 @@ class EmailPasswordActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                   // Greeting2(currentUser.value?.email ?: "No user")
+                    // Greeting2(currentUser.value?.email ?: "No user")
                     LoginScreen(currentUser, this::logIn, this::startActivity)
                 }
             }
@@ -67,6 +71,7 @@ class EmailPasswordActivity : ComponentActivity() {
         val intent = Intent(this, activityClass)
         startActivity(intent)
     }
+
     private fun logIn(email: String, password: String, currentUser: MutableState<FirebaseUser?>) {
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this) { task ->
             if (task.isSuccessful) {
@@ -113,45 +118,50 @@ class EmailPasswordActivity : ComponentActivity() {
 //    }
 }
 
-
 @Composable
-fun LoginScreen(currentUser: MutableState<FirebaseUser?>, logIn: (String, String, MutableState<FirebaseUser?>) -> Unit,startActivity: (Class<*>) -> Unit) {
+fun LoginScreen(
+    currentUser: MutableState<FirebaseUser?>,
+    logIn: (String, String, MutableState<FirebaseUser?>) -> Unit,
+    startActivity: (Class<*>) -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(currentUser.value?.email ?: "No user")
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+                    Text(
+                "Welcome",
+                fontSize = 24.sp,
+                color = Color.Green,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+        Card {
+            TextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+
+            )
+
+
         Spacer(modifier = Modifier.height(8.dp))
         TextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth()
+
         )
+        }
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = { logIn(email, password, currentUser) }) {
             Text("Log in")
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = {startActivity(RegisterActivity::class.java) }) {
+        Button(onClick = { startActivity(RegisterActivity::class.java) }) {
             Text("Create account")
-
         }
     }
 }
-
-
-
-@Composable
-fun Greeting2(name: String) {
-    Text(
-        text = "Hello $name!"
-    )
-}
-
