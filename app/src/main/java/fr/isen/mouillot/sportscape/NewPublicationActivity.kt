@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.database.FirebaseDatabase
 
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
@@ -51,7 +52,7 @@ class NewPublicationActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         TopBar(title = "Nouvelle Publication")
-                        DescriptionSection(onPublish = {})
+                        DescriptionSection()
                     }
                 }
             }
@@ -95,9 +96,9 @@ fun TopBar(title: String) {
 }
 
 @Composable
-fun DescriptionSection(onPublish: () -> Unit) {
+fun DescriptionSection() {
     var descriptionText by remember { mutableStateOf("") }
-
+    val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
     val context = LocalContext.current // Obtenir le contexte de l'activité parente
 
     Box(
@@ -150,9 +151,9 @@ fun DescriptionSection(onPublish: () -> Unit) {
         ) {
             Box(
                 modifier = Modifier.clickable {
-                    publierMessage(context, descriptionText)
-                    onPublish()
-                },
+                    val myRefToWrite = database.getReference("RegisterUser").push().setValue(descriptionText)
+                    val intent = Intent(context, MainActivity::class.java)
+                    context.startActivity(intent) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -167,15 +168,25 @@ fun DescriptionSection(onPublish: () -> Unit) {
     }
 }
 
-fun publierMessage(context: Context, message: String) {
-    val database = Firebase.database
-    val messagesRef = database.getReference("messages")
-    val newMessageRef = messagesRef.push()
-    val messageData = hashMapOf(
-        "contenu" to message,
-    )
-    newMessageRef.setValue(messageData)
-
-    val intent = Intent(context, MainActivity::class.java)
-    context.startActivity(intent)
+/*
+@Composable
+fun publierMessage(message: String){
+    val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+    val myRefToWrite = database.getReference("RegisterUser").push().setValue(message)
+//
+    val myRefToRead = database.getReference("tmp").get()
+////
+////        // Pour lire des données
+////        myRefToRead.addValueEventListener(object : ValueEventListener {
+////            override fun onDataChange(dataSnapshot: DataSnapshot) {
+////                val value = dataSnapshot.getValue(String::class.java)
+////                Log.d(TAG, "Value is: $value")
+////            }
+////
+////            override fun onCancelled(error: DatabaseError) {
+////                Log.d(TAG, "Failed to read value.", error.toException())
+////            }
+//        })
 }
+//
+*/
