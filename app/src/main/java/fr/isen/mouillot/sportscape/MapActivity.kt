@@ -24,13 +24,25 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        // Ajoutez un marqueur à Singapore, et déplacez la caméra.
-        val singapore = LatLng(1.35, 103.87)
+        // Ajoutez un marqueur à school, et déplacez la caméra.
+        val school = LatLng(43.12061856356527, 5.938851591473798)
         mMap.addMarker(
             MarkerOptions()
-                .position(singapore)
-                .title("Marker in Singapore")
+                .position(school)
+                .title("Marker at ISEN")
         )
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(singapore))
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(school))
+        // Définissez les préférences de zoom minimum et maximum.
+        mMap.setMinZoomPreference(1f) // Niveau de zoom minimum
+        mMap.setMaxZoomPreference(25f) // Niveau de zoom maximum
+
+        // Déplacez la caméra avec un niveau de zoom spécifique pour zoomer immédiatement.
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(school, 10f)) // Le dernier paramètre est le niveau de zoom
+
+        // Activez les contrôles de zoom UI
+        mMap.uiSettings.isZoomControlsEnabled = true
+
+        // Pour permettre aux utilisateurs de zoomer avec des gestes
+        mMap.uiSettings.isZoomGesturesEnabled = true
     }
 }
