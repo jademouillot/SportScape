@@ -35,6 +35,15 @@ import coil.compose.AsyncImage
 import com.google.firebase.firestore.FirebaseFirestore
 import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
 import com.google.firebase.storage.FirebaseStorage
+import android.content.Intent
+import androidx.compose.foundation.clickable
+//import fr.isen.mouillot.sportscape.ModifyActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import com.google.firebase.database.FirebaseDatabase
 
 
 class ProfileActivity : ComponentActivity() {
@@ -48,109 +57,133 @@ class ProfileActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     PrintInfos("Max Verstappen")
+                    /*val intent = Intent(this@ProfileActivity, ModifyActivity::class.java)
+                    startActivity(intent)*/
                 }
+                postdata("John Doe", 30, "Passionate about sports and outdoor activities.")
             }
         }
     }
-}
 
+    private fun postdata(name: String, age: Int, bio: String) {
+        val database =
+            FirebaseDatabase.getInstance("https://console.firebase.google.com/u/0/project/sportscape-38027/database/sportscape-38027-default-rtdb/data/~2F")
+        val myRefToWrite = database.getReference("RegisterUser")
 
+        val userBio = UserBio(name = name, age = age, bio = bio)
 
-
-
-// Supposons que vous passiez l'username comme argument pour récupérer l'image correspondante
-@Composable
-fun PrintInfos(username: String) {
-    /*val storageReference =
-        FirebaseStorage.getInstance().reference.child("profile_images/$username.jpg")
-
-    // Obtenir l'URL de l'image
-    var imageUrl = ""
-    storageReference.downloadUrl.addOnSuccessListener { uri ->
-        imageUrl = uri.toString()
-    }*/
-    val firestore = FirebaseFirestore.getInstance()
-    var username by remember { mutableStateOf("") }
-    var bio by remember { mutableStateOf("") }
-    var imageUrl by remember { mutableStateOf("") }
-
-    LaunchedEffect(userId) {
-        firestore.collection("Users").document(userId).get().addOnSuccessListener { document ->
-            username = document.getString("username") ?: ""
-            bio = document.getString("bio") ?: ""
-            imageUrl = document.getString("imageUrl") ?: "" // Assurez-vous d'avoir une URL d'image
-        }
+        myRefToWrite.push().setValue(userBio)
     }
 
+    data class UserBio(
+        val name: String,
+        val age: Int,
+        val bio: String
+    )
 
-    Column {
-        Text(
-            text = username,
-            textAlign = TextAlign.Start,
-            fontSize = 24.sp,
-            color = Color(0xFF000000),
-            modifier = Modifier
-        )
-        Row(
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.Top,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            // Afficher l'image dans un cercle
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = "Profile Image",
+
+    // Supposons que vous passiez l'username comme argument pour récupérer l'image correspondante
+    @Composable
+    fun PrintInfos(username: String) {
+        /*val storageReference =
+            FirebaseStorage.getInstance().reference.child("profile_images/$username.jpg")
+
+        // Obtenir l'URL de l'image
+        var imageUrl = ""
+        storageReference.downloadUrl.addOnSuccessListener { uri ->
+            imageUrl = uri.toString()
+        }*/
+        val firestore = FirebaseFirestore.getInstance()
+        var username = remember { mutableStateOf("") }
+        var bio = remember { mutableStateOf("") }
+        var imageUrl = remember { mutableStateOf("") }
+        val userId = ""
+
+        LaunchedEffect(userId) {
+            firestore.collection("Users").document(userId).get().addOnSuccessListener { document ->
+                //username = document.getString("username") ?: ""
+                //bio = document.getString("bio") ?: ""
+                //imageUrl = document.getString("imageUrl") ?: "" // Assurez-vous d'avoir une URL d'image
+            }
+        }
+
+
+        Column {
+            Text(
+                text = username.value,
+                textAlign = TextAlign.Start,
+                fontSize = 24.sp,
+                color = Color(0xFF000000),
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape), // Cela donne la forme circulaire à l'image
-                contentScale = ContentScale.Crop
             )
-            // Votre code existant pour afficher "posts", "followers", "following"
-            Box(modifier = Modifier.padding(top = 100.dp)) {
-                Column {
-                    Text(
-                        text = "posts ",
-                        textAlign = TextAlign.Center,
-                        fontSize = 16.sp,
-                        //fontStyle = FontStyle.,
-                        color = Color(0xFF000000),
-                        modifier = Modifier
-                    )
+            Row(
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Afficher l'image dans un cercle
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "Profile Image",
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape), // Cela donne la forme circulaire à l'image
+                    contentScale = ContentScale.Crop
+                )
+                // Votre code existant pour afficher "posts", "followers", "following"
+                Box(modifier = Modifier.padding(top = 100.dp)) {
+                    Column {
+                        Text(
+                            text = "posts ",
+                            textAlign = TextAlign.Center,
+                            fontSize = 16.sp,
+                            //fontStyle = FontStyle.,
+                            color = Color(0xFF000000),
+                            modifier = Modifier
+                        )
+                    }
                 }
-            }
-            Box(modifier = Modifier.padding(top = 100.dp)) {
-                Column {
-                    Text(
-                        text = "followers ",
-                        textAlign = TextAlign.Center,
-                        fontSize = 16.sp,
-                        //fontStyle = FontStyle.,
-                        color = Color(0xFF000000),
-                        modifier = Modifier
-                    )
+                Box(modifier = Modifier.padding(top = 100.dp)) {
+                    Column {
+                        Text(
+                            text = "followers ",
+                            textAlign = TextAlign.Center,
+                            fontSize = 16.sp,
+                            //fontStyle = FontStyle.,
+                            color = Color(0xFF000000),
+                            modifier = Modifier
+                        )
+                    }
                 }
-            }
-            Box(modifier = Modifier.padding(top = 100.dp)) {
-                Column {
-                    Text(
-                        text = "followings ",
-                        textAlign = TextAlign.Center,
-                        fontSize = 16.sp,
-                        //fontStyle = FontStyle.,
-                        color = Color(0xFF000000),
-                        modifier = Modifier
-                    )
+                Box(modifier = Modifier.padding(top = 100.dp)) {
+                    Column {
+                        Text(
+                            text = "followings ",
+                            textAlign = TextAlign.Center,
+                            fontSize = 16.sp,
+                            //fontStyle = FontStyle.,
+                            color = Color(0xFF000000),
+                            modifier = Modifier
+                        )
+                    }
                 }
+
             }
             Text(
-                text = bio,
+                text = bio.value,
                 textAlign = TextAlign.Start,
                 fontSize = 16.sp,
                 color = Color(0xFF000000),
                 modifier = Modifier.padding(top = 8.dp)
             )
+            /*Text(
+                text = "Modifier",
+                modifier = modifier
+                    .clickable { navigateToModifyActivity() }
+                    .padding(16.dp), // Ajoutez un padding pour un meilleur aspect et facilité de clic
+                color = Color.Blue // Couleur du texte pour le distinguer comme cliquable
+            )*/
         }
-
 
     }
 }
