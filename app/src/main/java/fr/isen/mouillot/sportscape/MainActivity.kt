@@ -40,6 +40,10 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Button
+
+
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -73,28 +77,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    //Greeting("Android")
-                }
-                MainScreenContent { destinationActivity ->
-                    // Appeler la fonction navigateFunction avec la classe de l'activité de destination
-                    navigateToNextScreen(destinationActivity)
-                }
-/*
-                // Utilisation de la fonction pour ajouter un like à une photo
-                addLikeToPhoto("photo123", "user456")
-
-                // Utilisation de la fonction pour ajouter un commentaire à une photo
-                addCommentToPhoto("photo123", "user456", "Superbe photo !")
-
-                // Utilisation de la fonction pour récupérer les photos depuis Firestore
-                getPhotosFromFirestore().addOnSuccessListener { documents ->
-                    for (document in documents) {
-                        val photo = document.toObject(Photo::class.java)
-                        // Faire quelque chose avec la photo (par exemple, l'afficher dans une RecyclerView)
+                    MainScreenContent { destinationActivity ->
+                        // Appeler la fonction navigateFunction avec la classe de l'activité de destination
+                        navigateToNextScreen(destinationActivity)
                     }
                 }
-                */
-
             }
         }
     }
@@ -104,52 +91,9 @@ class MainActivity : ComponentActivity() {
         startActivity(intent)
         finish()
     }
-    /*
-    // Fonction pour ajouter un like à une photo
-    fun addLikeToPhoto(photoId: String, userId: String) {
-        val photoRef = FirebaseFirestore.getInstance().collection("photos").document(photoId)
-
-        photoRef.get().addOnSuccessListener { document ->
-            if (document != null) {
-                val photo = document.toObject(Photo::class.java)
-                if (photo != null) {
-                    // Incrémenter le compteur de likes
-                    photo.likesCount++
-                    // Mettre à jour la photo dans Firestore
-                    photoRef.set(photo)
-                }
-            }
-        }
-    }
-
-    // Fonction pour ajouter un commentaire à une photo
-    fun addCommentToPhoto(photoId: String, userId: String, commentText: String) {
-        val photoRef = FirebaseFirestore.getInstance().collection("photos").document(photoId)
-
-        photoRef.get().addOnSuccessListener { document ->
-            if (document != null) {
-                val photo = document.toObject(Photo::class.java)
-                if (photo != null) {
-                    // Ajouter le commentaire à la liste de commentaires
-                    val comment = Comment(userId, commentText)
-                    photo.comments.add(comment)
-                    // Mettre à jour la photo dans Firestore
-                    photoRef.set(photo)
-                }
-            }
-        }
-    }
-
-    // Fonction pour récupérer les photos depuis Firestore
-    fun getPhotosFromFirestore(): Task<QuerySnapshot> {
-        return FirebaseFirestore.getInstance().collection("photos").get()
-    }
-    */
-
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreenContent(navigateFunction: (Class<*>) -> Unit) {
     Column(
@@ -217,7 +161,7 @@ fun MainScreenContent(navigateFunction: (Class<*>) -> Unit) {
 
             ClickableText(
                 text = AnnotatedString("Map"),
-                onClick = { /* Action à exécuter lors du clic */ },
+                onClick = { navigateFunction(MapActivity::class.java) },
                 style = androidx.compose.ui.text.TextStyle(fontSize = 20.sp,
                     color = Color.Blue),
                 modifier = Modifier
@@ -250,19 +194,3 @@ data class Comment(
     val userId: String,
     val text: String
 )
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SportScapeTheme {
-        Greeting("Android")
-    }
-}
