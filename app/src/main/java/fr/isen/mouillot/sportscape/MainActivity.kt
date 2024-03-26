@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Color.White // Changer la couleur de l'arrière-plan en blanc
                 ) {
-                    MainScreenContent(this, ::navigateToNextScreen)
+                    MainScreenContent(this)
                 }
             }
         }
@@ -93,7 +93,7 @@ class MainActivity : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MainScreenContent(context: Context, navigateFunction: (Class<*>) -> Unit) {
+fun MainScreenContent(context: Context) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
@@ -119,12 +119,12 @@ fun MainScreenContent(context: Context, navigateFunction: (Class<*>) -> Unit) {
         Spacer(modifier = Modifier.weight(1f))
 
         // Affichage de la barre d'action
-        ActionBar(context, navigateFunction)
+        ActionBar(context)
     }
 }
 
 @Composable
-fun ActionBar(context: Context, navigateFunction: (Class<*>) -> Unit) {
+fun ActionBar(context: Context) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
@@ -145,7 +145,7 @@ fun ActionBar(context: Context, navigateFunction: (Class<*>) -> Unit) {
         }
 
         IconButton(
-            onClick = { navigateFunction(LoginActivity::class.java) },
+            onClick = {  },
             modifier = Modifier
                 .clickable { /*ajouter direction*/ }
                 .padding(horizontal = 10.dp, vertical = 12.dp)

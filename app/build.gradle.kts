@@ -55,6 +55,7 @@ android {
 dependencies {
 
     implementation(libs.androidx.core.ktx)
+    implementation (libs.coil.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -100,6 +101,7 @@ dependencies {
     // Firebase Storage
     //noinspection UseTomlInstead
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation(libs.firebase.storage.ktx)
 
 
 
