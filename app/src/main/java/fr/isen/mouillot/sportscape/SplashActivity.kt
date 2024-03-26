@@ -35,7 +35,7 @@ import kotlin.concurrent.timerTask
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : ComponentActivity() {
 
-    private val SPLASH_TIME_OUT: Long = 5000 // 5 secondes
+    private val SPLASH_TIME_OUT: Long = 1000 // 5 secondes
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
