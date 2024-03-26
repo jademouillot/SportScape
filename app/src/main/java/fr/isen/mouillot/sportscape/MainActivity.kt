@@ -53,25 +53,25 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        FirebaseApp.initializeApp(this)
-//
-//        // Pour écrire des données
-//        val database = FirebaseDatabase.getInstance()
-//        val myRef = database.getReference("message")
-//
-//        myRef.setValue("Hello, World!")
-//
-//        // Pour lire des données
-//        myRef.addValueEventListener(object : ValueEventListener {
-//            override fun onDataChange(dataSnapshot: DataSnapshot) {
-//                val value = dataSnapshot.getValue(String::class.java)
-//                Log.d(TAG, "Value is: $value")
-//            }
-//
-//            override fun onCancelled(error: DatabaseError) {
-//                Log.d(TAG, "Failed to read value.", error.toException())
-//            }
-//        })
+        FirebaseApp.initializeApp(this)
+
+        // Pour écrire des données
+        val database = FirebaseDatabase.getInstance()
+        val myRef = database.getReference("message")
+
+        myRef.setValue("Hello, World!")
+
+        // Pour lire des données
+        myRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val value = dataSnapshot.getValue(String::class.java)
+                Log.d(TAG, "Value is: $value")
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.d(TAG, "Failed to read value.", error.toException())
+            }
+        })
 
         setContent {
             SportScapeTheme {

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "157202290793",
+    "project_id": "sportscape-38027",
+    "storage_bucket": "sportscape-38027.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:157202290793:android:0cdbb640f4794a99efeaf8",
+        "android_client_info": {
+          "package_name": "fr.isen.mouillot.sportscape"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQgC_bApkD1CocytSJHekkueXfQAbiH24"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

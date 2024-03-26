@@ -117,7 +117,6 @@ class RegisterActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
 fun RegisterScreen(currentUser: MutableState<FirebaseUser?>, register: (String, String, MutableState<FirebaseUser?>) -> Unit, takePicture: ActivityResultLauncher<Void?>){
     var email by remember { mutableStateOf("") }
@@ -147,13 +146,11 @@ fun RegisterScreen(currentUser: MutableState<FirebaseUser?>, register: (String, 
             label = { Text("Username") },
             modifier = Modifier.fillMaxWidth()
         )
+
         Spacer(modifier = Modifier.height(8.dp))
-        TextField(
-            value = photoUrl,
-            onValueChange = { photoUrl = it },
-            label = { Text("Photo URL") },
-            modifier = Modifier.fillMaxWidth().clickable { takePicture.launch(null) }
-        )
+        Button(onClick = { takePicture.launch(null) }) {
+            Text("Take Photo")
+        }
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = { register(email, password, currentUser) }) {
             Text("Create account")
