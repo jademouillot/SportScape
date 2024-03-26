@@ -23,6 +23,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
 
         // Ajoutez un marqueur à school, et déplacez la caméra.
         val school = LatLng(43.12061856356527, 5.938851591473798)
