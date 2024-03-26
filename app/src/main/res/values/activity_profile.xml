@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="profile_username">Username</string>
+    <string name="profile_followers">Followers: %1$d</string>
+    <string name="profile_following">Following: %1$d</string>
+    <string name="profile_posts">Posts: %1$d</string>
+    <string name="profile_bio">Biography</string>
+    <string name="profile_edit_bio">Edit Bio</string>
+
+</resources>
