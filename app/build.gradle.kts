@@ -101,6 +101,8 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("com.google.firebase:firebase-storage-ktx")
 
+
+
     // Firebase Remote Config
     //noinspection UseTomlInstead
     implementation("com.google.firebase:firebase-config-ktx")
@@ -108,10 +110,10 @@ dependencies {
     // (Optional) Add the dependencies for any other Firebase products you want to use
     // Check the Firebase documentation for the latest versions and additional services: https://firebase.google.com/docs/android/setup#available-libraries
 
-    implementation("com.google.android.gms:play-services-maps:18.0.2")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
 
-    implementation("com.google.maps.android:maps-compose:2.2.0")
+    implementation("com.google.maps.android:maps-compose:2.11.4")
 
-    implementation("androidx.appcompat:appcompat:1.4.1")
+    implementation("androidx.appcompat:appcompat:1.6.1")
 
 }
