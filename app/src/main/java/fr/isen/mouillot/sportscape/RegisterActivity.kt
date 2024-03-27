@@ -254,10 +254,3 @@ fun Greeting3(name: String, modifier: Modifier = Modifier) {
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview2() {
-    SportScapeTheme {
-        Greeting3("Android")
-    }
-}

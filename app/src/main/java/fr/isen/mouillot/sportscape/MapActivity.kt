@@ -70,7 +70,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 Icon(painter = painterResource(id = R.drawable.home), contentDescription = "Home", tint = Color(0,0,255), modifier = Modifier.size(24.dp))
             }
             IconButton(
-                onClick = { navigateFunction(LoginActivity::class.java) },
+                onClick = {  },
                 modifier = Modifier
                     .padding(horizontal = 10.dp, vertical = 12.dp)
             ) {
