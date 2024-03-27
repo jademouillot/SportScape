@@ -37,6 +37,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig.TAG
 import com.google.firebase.storage.FirebaseStorage
+import fr.isen.mouillot.sportscape.model.User
 import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
 import java.util.UUID
 
@@ -133,9 +134,7 @@ class RegisterActivity : ComponentActivity() {
             FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef = database.getReference("tmp").push()
 
-        val user = hashMapOf(
-            "email" to email, "username" to username, "photoUrl" to photoUrl
-        )
+        val user = User(username, email, photoUrl)
 
         myRef.setValue(user)
 
@@ -254,10 +253,3 @@ fun Greeting3(name: String, modifier: Modifier = Modifier) {
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview2() {
-    SportScapeTheme {
-        Greeting3("Android")
-    }
-}
