@@ -9,8 +9,11 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,6 +42,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,11 +52,15 @@ import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
+import coil.compose.rememberImagePainter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 import fr.isen.mouillot.sportscape.model.Post
 import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import java.util.Date
 import java.util.UUID
 
@@ -70,9 +78,16 @@ class NewPublicationActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         TopBar(title = "Nouvelle Publication")
-                        if (currentUser != null && currentUser.email != null){
+                        if (currentUser != null && currentUser.email != null) {
                             DescriptionSection(
-                                postPost = ::postPost,
+                                postPost = { description, images, user, returnValue ->
+                                    postPost(
+                                        description,
+                                        images,
+                                        user,
+                                        returnValue as MutableState<Boolean>
+                                    )
+                                },
                                 user = currentUser.email ?: "NO EMAIL"
                             )
                         } else {
@@ -83,26 +98,71 @@ class NewPublicationActivity : ComponentActivity() {
             }
         }
     }
+
     private fun startActivity(activity: Class<*>) {
         val intent = Intent(this, activity)
         startActivity(intent)
     }
 
-    private fun postPost(description: String, user: String, returnValue: MutableState<Boolean>) {
-        val database =
-            FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+    private fun postPost(description: String, images: List<String>?, user: String, returnValue: MutableState<Boolean>) {
+        val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef = database.getReference("posts")
+
         val myPost = Post(
-            description = description, userId = user, date = Date().time
-        ) // Corrected the fields
+            description = description,
+            images = mutableListOf(),
+            userId = user,
+            date = Date().time
+        )
 
         val uuid = UUID.randomUUID().toString()
-        myRef.child(uuid).setValue(myPost)
-        Log.d(ContentValues.TAG, "Post saved successfully.")
-        returnValue.value = true
+
+        // Vérifiez si des images sont présentes
+        if (!images.isNullOrEmpty()) {
+            val imageUrls = mutableListOf<String>()
+            val storageRef = FirebaseStorage.getInstance().reference.child("images")
+
+            // Parcourez chaque image pour les télécharger dans Firebase Storage
+            images.forEachIndexed { index, uriString ->
+                val imageRef = storageRef.child("$uuid/image$index.jpg")
+                val imageUri = Uri.parse(uriString)
+                val uploadTask = imageRef.putFile(imageUri)
+
+                // Ajoutez l'URL de l'image à la liste
+                imageRef.downloadUrl.addOnSuccessListener { imageUrl ->
+                    imageUrls.add(imageUrl.toString())
+
+                    // Vérifiez si toutes les images ont été téléchargées
+                    if (imageUrls.size == images.size) {
+                        // Ajoutez les URLs d'images à l'objet Post
+                        myPost.images = imageUrls
+
+                        // Enregistrez l'objet Post dans la base de données Firebase
+                        myRef.child(uuid).setValue(myPost)
+                            .addOnSuccessListener {
+                                Log.d(ContentValues.TAG, "Post saved successfully.")
+                                returnValue.value = true
+                            }
+                            .addOnFailureListener { exception ->
+                                Log.e(ContentValues.TAG, "Failed to save post: $exception")
+                                // Gérer l'échec de l'enregistrement du message si nécessaire
+                            }
+                    }
+                }
+            }
+        } else {
+            // Si aucune image n'est présente, enregistrez uniquement le texte
+            myRef.child(uuid).setValue(myPost)
+                .addOnSuccessListener {
+                    Log.d(ContentValues.TAG, "Post saved successfully.")
+                    returnValue.value = true
+                }
+                .addOnFailureListener { exception ->
+                    Log.e(ContentValues.TAG, "Failed to save post: $exception")
+                    // Gérer l'échec de l'enregistrement du message si nécessaire
+                }
+        }
     }
-
-
 }
 
 
@@ -140,22 +200,39 @@ fun TopBar(title: String) {
 
 @Composable
 fun DescriptionSection(
-    postPost: (String, String, MutableState<Boolean>) -> Unit,
+    postPost: (String, List<String>?, String, MutableState<Boolean>) -> Unit,
     user: String
 ) {
     var descriptionText by remember { mutableStateOf("") }
     val publishSnackbarVisible = remember { mutableStateOf(false) }
-    val database =
-        FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+
+    val selectedImages = remember { mutableStateOf<List<String>?>(null) }
+    val pickImageLauncher = rememberLauncherForActivityResult( contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            selectedImages.value = listOf(it.toString())
+        }
+    }
+
+    val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
 
     Column(
         modifier = Modifier.fillMaxHeight(), // Occupies the entire height of the parent
         verticalArrangement = Arrangement.SpaceBetween // Aligns children vertically with space between them
     ) {
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
                 .padding(horizontal = 16.dp),
         ) {
+            Button(
+                onClick = {
+                    pickImageLauncher.launch("image/*")
+                },
+                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+            ) {
+                Text("Ajouter des images")
+            }
+
             Text("Description : ", fontWeight = FontWeight.Bold)
             Surface(
                 modifier =
@@ -186,14 +263,31 @@ fun DescriptionSection(
                 }
             }
         }
+        Column{
+            selectedImages.value?.let { images ->
+                images.forEach { imageUri ->
+                    val painter = rememberImagePainter(imageUri)
+                    Image(
+                        painter = painter,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(100.dp)
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp) // Add padding to the bottom for space
+                .padding(16.dp)
         ) {
             Button(
                 onClick = {
-                    postPost(descriptionText, user, publishSnackbarVisible)
+                    val imageUrls = selectedImages.value?.map { it.toString() } ?: emptyList()
+                    postPost(descriptionText, selectedImages.value, user, publishSnackbarVisible)
                 },
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -224,4 +318,3 @@ fun PublishConfirmationSnackbar(
         SnackbarHost(snackbarHostState)
     }
 }
-
