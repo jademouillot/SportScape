@@ -5,9 +5,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -57,9 +54,23 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        var currentUsername = mutableStateOf("")
+
+// Dans l'activité de destination
+        val extras = intent.extras
+        if (extras != null) {
+            val email = extras.getString("Email") // Remplacez "UserUuid" par votre propre clé
+            if (email != null) {
+                GetUserfromEmail(email, currentUsername)
+            }
+        }
+
         FirebaseApp.initializeApp(this)
 
+
         setContent {
+
             SportScapeTheme {
                 val allPosts = remember { mutableStateOf(listOf<Post>()) }
                 val userData = remember { mutableStateOf(User()) }
@@ -73,10 +84,11 @@ class MainActivity : ComponentActivity() {
                 ) {
                     MainScreenContent(
                         this,
-                        ::navigateToNextScreen,
+                        ::startActivity,
                         ::signOut,
                         userData.value.username,
-                        allPosts.value
+                        allPosts.value,
+                        ::GetUserfromEmail
                     )
                 }
             }
@@ -87,14 +99,14 @@ class MainActivity : ComponentActivity() {
         FirebaseAuth.getInstance().signOut()
     }
 
-    private fun navigateToNextScreen(destinationActivity: Class<*>) {
-        val intent = Intent(this, destinationActivity)
+    private fun startActivity(activity: Class<*>) {
+        val intent = Intent(this, activity)
         startActivity(intent)
-        finish()
     }
 
     private fun displayData(allPosts: MutableState<List<Post>>, userData: MutableState<User>?) {
-        val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+        val database =
+            FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
         val postsRef = database.getReference("posts").orderByChild("date")
         val posts = mutableListOf<Post>()
 
@@ -103,8 +115,10 @@ class MainActivity : ComponentActivity() {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (postSnapshot in dataSnapshot.children) {
                     val post = postSnapshot.getValue(Post::class.java)
+                    if (post != null) {
 
-                    post?.let { posts.add(it) }
+                        post.let { posts.add(it) }
+                    }
                 }
                 allPosts.value = posts.reversed()
 
@@ -117,6 +131,31 @@ class MainActivity : ComponentActivity() {
 
     }
 
+    fun GetUserfromEmail(email: String, returnUsername: MutableState<String>) {
+        val database =
+            FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+        val myRef = database.getReference("tmp") // Change "users" to "tmp"
+        myRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                for (userSnapshot in dataSnapshot.children) {
+                    val user = userSnapshot.getValue(User::class.java)
+                    Log.d("EMAIL", "User: $user")
+                    if (user != null) {
+                        if (user.email == email) {
+//                            val username = userSnapshot.key // Retrieve the user's ID
+                            returnUsername.value = user.username
+                            Log.d("EMAIL - GOOD", "User: $user")
+                        }
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.d(TAG, "Failed to read value.", error.toException())
+            }
+        })
+    }
+
 
 }
 
@@ -124,14 +163,13 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreenContent(
     context: Context,
-    navigateFunction: (Class<*>) -> Unit,
+    startActivity: (Class<*>) -> Unit,
     signOut: () -> Unit,
     username: String,
-    posts: List<Post>
+    posts: List<Post>,
+    getUserfromuuid: (String, MutableState<String>) -> Unit
 ) {
     Card {
-
-
         LazyColumn(
             modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -155,13 +193,15 @@ fun MainScreenContent(
                 )
             }
 
-
             items(posts) { post ->
-                Text(
-                    text = "Post by ${post.userId}: ${post.description}: ${getTimeAgo(post.date)}",
-                    //faire une fonction qui dis quand le post a été posté genre depuis combien detmps
-                    modifier = Modifier.padding(16.dp)
-                )
+                val userName = remember { mutableStateOf("") }
+                getUserfromuuid(post.userId, userName)
+                if (userName.value != "") {
+                    Text(
+                        text = "Post by ${userName.value}: \nDescription : ${post.description}\nPosted ${getTimeAgo(post.date)}",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
         }
     }
@@ -171,15 +211,16 @@ fun MainScreenContent(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
-//                .align(Alignment.TopEnd)
                 .padding(top = 10.dp, end = 10.dp)
         ) {
             IconButton(
-                onClick = { signOut() }, // Call the signOut function when the button is clicked
+                onClick = {
+                    signOut()
+                    startActivity(LoginActivity::class.java)
+                }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.logout),
@@ -189,12 +230,10 @@ fun MainScreenContent(
                 )
             }
         }
-
     }
-    ActionBar(context, navigateFunction) // Add the ActionBar here
-
-
+    ActionBar(context, startActivity)
 }
+
 @RequiresApi(Build.VERSION_CODES.O)
 fun getTimeAgo(time: Long): String {
     val now = System.currentTimeMillis()
@@ -211,6 +250,7 @@ fun getTimeAgo(time: Long): String {
 
 @Composable
 fun ActionBar(context: Context, navigateFunction: (Class<*>) -> Unit) {
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,

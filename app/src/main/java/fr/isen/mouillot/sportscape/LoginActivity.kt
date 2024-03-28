@@ -49,7 +49,7 @@ class LoginActivity
             var currentUser = remember {
                 mutableStateOf(auth.currentUser)
             }
-//            logIn("doudo@gmail.com", "doudou", currentUser)
+
             SportScapeTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
@@ -57,14 +57,15 @@ class LoginActivity
                 ) {
                     // Greeting2(currentUser.value?.email ?: "No user")
                     LoginScreen(currentUser, this::logIn, this::startActivity)
+
                 }
             }
         }
     }
 
-    private fun startActivity(UserUuid: String) {
+    private fun startActivity(userEmail: String) {
         val intent = Intent(this, MainActivity::class.java)
-        intent.putExtra("UserUuid", UserUuid)
+        intent.putExtra("Email", userEmail)
         startActivity(intent)
     }
 
@@ -74,12 +75,12 @@ class LoginActivity
     }
 
     private fun logIn(email: String, password: String, currentUser: MutableState<FirebaseUser?>) {
-        if (email.isBlank() || password.isBlank()) {
-            Toast.makeText(
-                baseContext, "Please fill in all fields.", Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
+//        if (email.isBlank() || password.isBlank()) {
+//            Toast.makeText(
+//                baseContext, "Please fill in all fields.", Toast.LENGTH_SHORT
+//            ).show()
+//            return
+//        }
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 // Sign in success, update UI with the signed-in user's information
@@ -106,8 +107,8 @@ fun LoginScreen(
     logIn: (String, String, MutableState<FirebaseUser?>) -> Unit,
     startActivity: (Class<*>) -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("doudou@gmail.com") }
+    var password by remember { mutableStateOf("doudou") }
 
     Column(
         modifier = Modifier.fillMaxSize(),
