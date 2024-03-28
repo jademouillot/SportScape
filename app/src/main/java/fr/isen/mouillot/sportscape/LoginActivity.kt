@@ -37,23 +37,18 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
 
-class EmailPasswordActivity : ComponentActivity() {
+class LoginActivity
+    : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Initialize Firebase Auth
         auth = Firebase.auth
-
-
         setContent {
-
             var currentUser = remember {
                 mutableStateOf(auth.currentUser)
             }
-
-            //logIn("doudo@gmail.com", "doudou", currentUser)
-
 
             SportScapeTheme {
                 // A surface container using the 'background' color from the theme
@@ -62,23 +57,37 @@ class EmailPasswordActivity : ComponentActivity() {
                 ) {
                     // Greeting2(currentUser.value?.email ?: "No user")
                     LoginScreen(currentUser, this::logIn, this::startActivity)
+
                 }
             }
         }
     }
 
-    private fun startActivity(activityClass: Class<*>) {
-        val intent = Intent(this, activityClass)
+    private fun startActivity(userEmail: String) {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.putExtra("Email", userEmail)
+        startActivity(intent)
+    }
+
+    private fun startActivity(activity: Class<*>) {
+        val intent = Intent(this, activity)
         startActivity(intent)
     }
 
     private fun logIn(email: String, password: String, currentUser: MutableState<FirebaseUser?>) {
-        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this) { task ->
+//        if (email.isBlank() || password.isBlank()) {
+//            Toast.makeText(
+//                baseContext, "Please fill in all fields.", Toast.LENGTH_SHORT
+//            ).show()
+//            return
+//        }
+        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 // Sign in success, update UI with the signed-in user's information
                 Log.d(TAG, "signInWithEmail:success")
                 currentUser.value = auth.currentUser
-                startActivity(MainActivity::class.java)
+
+                startActivity(auth.currentUser!!.email ?: "No user")
                 finish()
             } else {
                 // If sign in fails, display a message to the user.
@@ -90,32 +99,6 @@ class EmailPasswordActivity : ComponentActivity() {
         }
     }
 
-//    private fun Register(
-//        email: String,
-//        password: String,
-//        currentUser: MutableState<FirebaseUser?>
-//    ) {
-//        auth.signInWithEmailAndPassword(email, password)
-//            .addOnCompleteListener(this) { task ->
-//                if (task.isSuccessful) {
-//                    // Sign in success, update UI with the signed-in user's information
-//                    Log.d(TAG, "signInWithEmail:success")
-//                    currentUser.value = auth.currentUser
-//                    startActivity(RegisterActivity::class.java)
-//                    finish()
-//
-//                } else {
-//                    // If sign in fails, display a message to the user.
-//                    Log.w(TAG, "signInWithEmail:failure", task.exception)
-//                    Toast.makeText(
-//                        baseContext,
-//                        "Authentication failed.",
-//                        Toast.LENGTH_SHORT,
-//                    ).show()
-//
-//                }
-//            }
-//    }
 }
 
 @Composable
@@ -124,8 +107,8 @@ fun LoginScreen(
     logIn: (String, String, MutableState<FirebaseUser?>) -> Unit,
     startActivity: (Class<*>) -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("doudou@gmail.com") }
+    var password by remember { mutableStateOf("doudou") }
 
     Column(
         modifier = Modifier.fillMaxSize(),
