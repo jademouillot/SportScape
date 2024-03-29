@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberImagePainter
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -262,6 +264,26 @@ fun MainScreenContent(
                     val userName = remember { mutableStateOf("") }
                     var currentComment by remember { mutableStateOf("") } // Add this line
 
+//                    val imageUri = remember { mutableStateOf("") }
+//                    if (post.images != null && post.images.isNotEmpty()) {
+//                        imageUri.value = post.images[0]
+//                    }
+                    if (post.images != null) {
+                        for (image in post.images) {
+                            val imagePainter = rememberImagePainter(data = image)
+                            Image(
+                                painter = imagePainter,
+                                contentDescription = "Post image",
+                                modifier = Modifier
+                                    .height(200.dp)
+                                    .fillMaxWidth()
+                            )
+                        }
+
+                    }
+
+
+
                     getUserfromuuid(post.userEmail, userName)
 
 
@@ -275,6 +297,7 @@ fun MainScreenContent(
                                 // Pass the post ID or any other data to DetailPostActivity
                                 intent.putExtra("postId", post.id)
                                 // Start DetailPostActivity
+
                                 startActivity(DetailPostActivity::class.java)
                             }) {
                                 Text(
