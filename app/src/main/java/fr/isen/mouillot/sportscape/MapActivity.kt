@@ -28,10 +28,10 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import android.Manifest
 import com.google.android.gms.maps.model.LatLngBounds
-import fr.isen.mouillot.sportscape.GpxPoint
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
+import kotlinx.coroutines.*
 
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
