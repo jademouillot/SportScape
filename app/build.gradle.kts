@@ -53,7 +53,8 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.material)
     implementation(libs.androidx.core.ktx)
     implementation (libs.coil.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
