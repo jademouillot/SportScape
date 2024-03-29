@@ -14,7 +14,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -27,12 +26,12 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import android.Manifest
+import androidx.compose.ui.graphics.Color
+import android.widget.Button
 import com.google.android.gms.maps.model.LatLngBounds
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
-import kotlinx.coroutines.*
-
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
@@ -189,6 +188,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     companion object {
         private const val PERMISSION_REQUEST_CODE = 100
+        private const val REQUEST_CODE_CHOOSE_GPX = 1001
     }
     private fun loadAndParseGpxFile(fileName: String): List<GpxPoint> {
         return parseGpx(assets.open(fileName))
