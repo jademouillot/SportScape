@@ -77,6 +77,12 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val authEmail = FirebaseAuth.getInstance().currentUser?.email
+        if (authEmail != null) {
+            Log.d("EMAIL", "Email: $authEmail")
+            GetUserfromEmail(authEmail, currentUsername)
+        }
+
         FirebaseApp.initializeApp(this)
 
 
@@ -161,16 +167,18 @@ class MainActivity : ComponentActivity() {
     fun GetUserfromEmail(email: String, returnUsername: MutableState<String>) {
         val database =
             FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
-        val myRef = database.getReference("tmp") // Change "users" to "tmp"
+        val myRef = database.getReference("user") // Change "users" to "tmp"
         myRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (userSnapshot in dataSnapshot.children) {
                     val user = userSnapshot.getValue(User::class.java)
+                    Log.d("EMAIL- ici", "Email: $email")
 //                    Log.d("EMAIL", "User: $user")
                     if (user != null) {
                         if (user.email == email) {
 //                            val username = userSnapshot.key // Retrieve the user's ID
                             returnUsername.value = user.username
+                            Log.d("EMAIL - GOOD", "User: $user")
 //                            Log.d("EMAIL - GOOD", "User: $user")
                         }
                     }
