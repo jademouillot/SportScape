@@ -42,17 +42,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.draw.clip
 import coil.compose.rememberImagePainter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -60,7 +60,6 @@ import com.google.firebase.storage.FirebaseStorage
 import fr.isen.mouillot.sportscape.model.Post
 import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.*
 import java.util.Date
 import java.util.UUID
 
@@ -80,42 +79,64 @@ class NewPublicationActivity : ComponentActivity() {
                         TopBar(title = "Nouvelle Publication")
                         if (currentUser != null && currentUser.email != null) {
                             DescriptionSection(
-                                postPost = { description, images, user, returnValue ->
-                                    postPost(
-                                        description,
-                                        images,
-                                        user,
-                                        returnValue as MutableState<Boolean>
-                                    )
-                                },
+                                postPost = ::postPost,
+//                                selectedPhotos = selectedPhotos, GROS DOUTE VOIR AVCE LES FILLE
                                 user = currentUser.email ?: "NO EMAIL"
                             )
                         } else {
                             Text("Vous devez être connecté pour publier un post.")
                         }
                     }
+
+//                        DescriptionSection(selectedPhotos)
                 }
             }
         }
     }
 
+
+    //    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//        if (requestCode == REQUEST_CODE_PICK_IMAGES && resultCode == RESULT_OK) {
+//            // Récupère les Uri des photos sélectionnées depuis l'intention
+//            val clipData = data?.clipData
+//            if (clipData != null) {
+//                for (i in 0 until clipData.itemCount) {
+//                    val uri = clipData.getItemAt(i).uri
+//                    this.selectedPhotos.add(uri) // Mettre à jour la variable globale avec les photos sélectionnées
+//                }
+//            } else {
+//                val uri = data?.data
+//                if (uri != null) {
+//                    selectedPhotos.add(uri) // Mettre à jour la variable globale avec les photos sélectionnées
+//                }
+//            }
+//        }
+//    }
     private fun startActivity(activity: Class<*>) {
         val intent = Intent(this, activity)
         startActivity(intent)
     }
 
-    private fun postPost(description: String, images: List<String>?, user: String, returnValue: MutableState<Boolean>) {
-        val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+    private fun postPost(
+        description: String,
+        images: List<String>?,
+        userEmail: String,
+        returnValue: MutableState<Boolean>
+    ) {
+        val database =
+            FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef = database.getReference("posts")
-
+        val uuid = UUID.randomUUID().toString()
         val myPost = Post(
             description = description,
-            images = mutableListOf(),
-            userId = user,
-            date = Date().time
+            userId = FirebaseAuth.getInstance().currentUser?.uid ?: "",
+            date = Date().time,
+            userEmail = userEmail,
+            id = uuid,
+            likes = 0
         )
 
-        val uuid = UUID.randomUUID().toString()
 
         // Vérifiez si des images sont présentes
         if (!images.isNullOrEmpty()) {
@@ -124,45 +145,51 @@ class NewPublicationActivity : ComponentActivity() {
 
             // Parcourez chaque image pour les télécharger dans Firebase Storage
             images.forEachIndexed { index, uriString ->
-                val imageRef = storageRef.child("$uuid/image$index.jpg")
+//       //         val imageRef = storageRef.child("$uuid/image$index.jpg")
+                val imageRef = storageRef.child("$uuid.jpg")
                 val imageUri = Uri.parse(uriString)
                 val uploadTask = imageRef.putFile(imageUri)
+                uploadTask.addOnSuccessListener {
+                    imageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                        // Utilisez downloadUri.toString() pour obtenir l'URL de téléchargement de la photo
 
-                // Ajoutez l'URL de l'image à la liste
-                imageRef.downloadUrl.addOnSuccessListener { imageUrl ->
-                    imageUrls.add(imageUrl.toString())
+                        val imageUrl = downloadUri.toString()
+                        imageUrls.add(imageUrl)
 
-                    // Vérifiez si toutes les images ont été téléchargées
-                    if (imageUrls.size == images.size) {
-                        // Ajoutez les URLs d'images à l'objet Post
-                        myPost.images = imageUrls
+                        // Vérifiez si toutes les images ont été téléchargées
+                        if (imageUrls.size == images.size) {
+                            // Ajoutez les URLs d'images à l'objet Post
+                            myPost.images = imageUrls
 
-                        // Enregistrez l'objet Post dans la base de données Firebase
-                        myRef.child(uuid).setValue(myPost)
-                            .addOnSuccessListener {
-                                Log.d(ContentValues.TAG, "Post saved successfully.")
-                                returnValue.value = true
+                            imageUrls.forEachIndexed { index, imageUrl ->
+                                Log.d("Image URL", "Image $index URL: $imageUrl")
                             }
-                            .addOnFailureListener { exception ->
-                                Log.e(ContentValues.TAG, "Failed to save post: $exception")
-                                // Gérer l'échec de l'enregistrement du message si nécessaire
-                            }
+
+                            // Enregistrez l'objet Post dans la base de données Firebase
+                            myRef.child(uuid).setValue(myPost).addOnSuccessListener {
+                                    Log.d(ContentValues.TAG, "Post saved successfully.")
+                                    returnValue.value = true
+                                }.addOnFailureListener { exception ->
+                                    Log.e(ContentValues.TAG, "Failed to save post: $exception")
+                                    // Gérer l'échec de l'enregistrement du message si nécessaire
+                                }
+                        }
                     }
                 }
             }
         } else {
             // Si aucune image n'est présente, enregistrez uniquement le texte
-            myRef.child(uuid).setValue(myPost)
-                .addOnSuccessListener {
+            myRef.child(uuid).setValue(myPost).addOnSuccessListener {
                     Log.d(ContentValues.TAG, "Post saved successfully.")
                     returnValue.value = true
-                }
-                .addOnFailureListener { exception ->
+                }.addOnFailureListener { exception ->
                     Log.e(ContentValues.TAG, "Failed to save post: $exception")
                     // Gérer l'échec de l'enregistrement du message si nécessaire
                 }
         }
     }
+
+
 }
 
 
@@ -200,20 +227,21 @@ fun TopBar(title: String) {
 
 @Composable
 fun DescriptionSection(
-    postPost: (String, List<String>?, String, MutableState<Boolean>) -> Unit,
-    user: String
+    postPost: (String, List<String>?, String, MutableState<Boolean>) -> Unit, user: String
 ) {
     var descriptionText by remember { mutableStateOf("") }
     val publishSnackbarVisible = remember { mutableStateOf(false) }
 
     val selectedImages = remember { mutableStateOf<List<String>?>(null) }
-    val pickImageLauncher = rememberLauncherForActivityResult( contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            selectedImages.value = listOf(it.toString())
+    val pickImageLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                selectedImages.value = listOf(it.toString())
+            }
         }
-    }
 
-    val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+    val database =
+        FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
 
     Column(
         modifier = Modifier.fillMaxHeight(), // Occupies the entire height of the parent
@@ -227,16 +255,14 @@ fun DescriptionSection(
             Button(
                 onClick = {
                     pickImageLauncher.launch("image/*")
-                },
-                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+                }, modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
             ) {
                 Text("Ajouter des images")
             }
 
             Text("Description : ", fontWeight = FontWeight.Bold)
             Surface(
-                modifier =
-                Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 color = Color(232, 232, 232),
                 border = BorderStroke(2.dp, Color.Black),
                 shape = MaterialTheme.shapes.medium,
@@ -263,7 +289,7 @@ fun DescriptionSection(
                 }
             }
         }
-        Column{
+        Column {
             selectedImages.value?.let { images ->
                 images.forEach { imageUri ->
                     val painter = rememberImagePainter(imageUri)
@@ -287,10 +313,13 @@ fun DescriptionSection(
             Button(
                 onClick = {
                     val imageUrls = selectedImages.value?.map { it.toString() } ?: emptyList()
-                    postPost(descriptionText, selectedImages.value, user, publishSnackbarVisible)
+                    Log.d(
+                        "Description Section",
+                        "Description: $descriptionText, Images: $imageUrls"
+                    )
+                    postPost(descriptionText, imageUrls, user, publishSnackbarVisible)
                 },
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
             ) {
                 Text(
@@ -299,7 +328,38 @@ fun DescriptionSection(
             }
         }
     }
+
+    if (publishSnackbarVisible.value) {
+        PublishConfirmationSnackbar(
+            context = LocalContext.current, message = "Message publié avec succès"
+        )
+    }
 }
+
+
+fun openGallery(activity: Activity) {
+    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+        addCategory(Intent.CATEGORY_OPENABLE)
+        type = "image/*"
+        putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+    }
+    val REQUEST_CODE_PICK_IMAGES = 1
+    activity.startActivityForResult(intent, REQUEST_CODE_PICK_IMAGES)
+}
+
+//fun publish(description: String, photos: List<Uri>) {
+//    // Publie la description dans la base de données Firebase
+//    val database = FirebaseDatabase.getInstance()
+//    val ref = database.getReference("publications").push()
+//    ref.child("description").setValue(description)
+//
+//    // Publie les photos dans le stockage Firebase
+//    photos.forEachIndexed { index, uri ->
+//        val storageRef =
+//            FirebaseStorage.getInstance().reference.child("images/${ref.key}/photo$index")
+//        storageRef.putFile(uri)
+//    }
+//}
 
 @Composable
 fun PublishConfirmationSnackbar(
