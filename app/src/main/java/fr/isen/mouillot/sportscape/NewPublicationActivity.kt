@@ -126,16 +126,17 @@ class NewPublicationActivity : ComponentActivity() {
             images.forEachIndexed { index, uriString ->
                 val imageRef = storageRef.child("$uuid/image$index.jpg")
                 val imageUri = Uri.parse(uriString)
-                val uploadTask = imageRef.putFile(imageUri)
-
-                // Ajoutez l'URL de l'image à la liste
-                imageRef.downloadUrl.addOnSuccessListener { imageUrl ->
+                val uploadTask = imageRef.putFile(imageUri).addOnSuccessListener { imageUrl ->
                     imageUrls.add(imageUrl.toString())
 
                     // Vérifiez si toutes les images ont été téléchargées
                     if (imageUrls.size == images.size) {
                         // Ajoutez les URLs d'images à l'objet Post
                         myPost.images = imageUrls
+
+                        imageUrls.forEachIndexed { index, imageUrl ->
+                            Log.d("Image URL", "Image $index URL: $imageUrl")
+                        }
 
                         // Enregistrez l'objet Post dans la base de données Firebase
                         myRef.child(uuid).setValue(myPost)
@@ -287,7 +288,8 @@ fun DescriptionSection(
             Button(
                 onClick = {
                     val imageUrls = selectedImages.value?.map { it.toString() } ?: emptyList()
-                    postPost(descriptionText, selectedImages.value, user, publishSnackbarVisible)
+                    Log.d("Description Section", "Description: $descriptionText, Images: $imageUrls")
+                    postPost(descriptionText, imageUrls, user, publishSnackbarVisible)
                 },
                 modifier = Modifier
                     .fillMaxWidth(),
