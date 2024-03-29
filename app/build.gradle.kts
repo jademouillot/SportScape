@@ -54,13 +54,16 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.material)
+implementation(libs.androidx.material)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
 
 
     implementation (libs.coil.compose)
+
+
+
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -70,6 +73,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
     implementation(libs.firebase.firestore)
+    implementation(libs.androidx.camera.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -79,6 +83,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     //noinspection UseTomlInstead
     implementation("androidx.compose.material:material-icons-extended")
+    implementation (libs.coil)
 
 
 
@@ -130,6 +135,5 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
 
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-
 
 }

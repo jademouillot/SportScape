@@ -115,8 +115,8 @@ fun LoginScreen(
     logIn: (String, String, MutableState<FirebaseUser?>) -> Unit,
     startActivity: (Class<*>) -> Unit
 ) {
-    var email by remember { mutableStateOf("doudou@gmail.com") }
-    var password by remember { mutableStateOf("doudou") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier.fillMaxSize(),

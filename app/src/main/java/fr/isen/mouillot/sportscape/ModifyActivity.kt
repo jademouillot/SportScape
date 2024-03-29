@@ -17,12 +17,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.TabRowDefaults.Divider
-import androidx.compose.material.TextField
+
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,7 +62,7 @@ class ModifyActivity : ComponentActivity() {
                     val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
                     val reference = database.getReference("users")
 
-                    //val cleanedEmail = userName?.replace(".", "_dot_")?.replace("#", "_hash_")?.replace("$", "_dollar_") // et ainsi de suite pour les autres caractères non valides
+                    //val cleanedEmail = userName?.replace(".", "dot")?.replace("#", "hash")?.replace("$", "dollar") // et ainsi de suite pour les autres caractères non valides
 
                     var userNameReal: String? = null
                     var userKey: String = ""
@@ -278,6 +279,6 @@ fun DisplayReceivedValue(receivedValue: String) {
     Text(
         text = receivedValue,
         //style = TextStyle(fontSize = 20.sp)
-    )
+    )
 }
 */

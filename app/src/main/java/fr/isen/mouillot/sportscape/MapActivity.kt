@@ -1,5 +1,4 @@
 package fr.isen.mouillot.sportscape
-
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -14,6 +13,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -26,23 +26,17 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import android.Manifest
-import androidx.compose.ui.graphics.Color
-import android.widget.Button
 import com.google.android.gms.maps.model.LatLngBounds
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
 
+
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
-
-        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
-        mapFragment?.getMapAsync(this)
-
         // Configure the ComposeView to display the ActionBar
         val actionBarComposeView = findViewById<ComposeView>(R.id.actionBarComposeView)
         actionBarComposeView.setContent {
@@ -75,7 +69,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             mapFragment?.getMapAsync(this)
         }
     }
-
     // Assurez-vous de surcharger onRequestPermissionsResult pour gérer le résultat de la demande de permission
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -94,20 +87,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
-
         val school = LatLng(43.12061856356527, 5.938851591473798)
-        mMap.addMarker(MarkerOptions().position(school).title("Marker at ISEN"))
+        mMap.addMarker(MarkerOptions().position(school).title("ISEN de Toulon"))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(school, 10f))
         mMap.setMinZoomPreference(10f)
         mMap.setMaxZoomPreference(20f)
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.uiSettings.isZoomGesturesEnabled = true
-
-        val gpxPoints = loadAndParseGpxFile("Vélo Toulon - Cassis.gpx")
+        val gpxPoints = loadAndParseGpxFile("test.gpx")
         if (gpxPoints.isNotEmpty()) {
             val polylineOptions = com.google.android.gms.maps.model.PolylineOptions()
             gpxPoints.forEach { point ->
@@ -115,20 +105,16 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             }
             mMap.addPolyline(polylineOptions)
         }
-
         if (gpxPoints.isNotEmpty()) {
             val builder = LatLngBounds.Builder()
             gpxPoints.forEach { point ->
                 builder.include(LatLng(point.latitude, point.longitude))
             }
             val bounds = builder.build()
-
             // Ajustez selon la taille de votre vue de carte
             val padding = 100 // en pixels
             mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
         }
-
-
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -141,8 +127,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             mMap.uiSettings.isMyLocationButtonEnabled = true
         }
     }
-
-
     @Composable
     fun ActionMapBar(context: AppCompatActivity, navigateFunction: (Class<*>) -> Unit) {
         Row(
@@ -157,7 +141,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 Icon(painter = painterResource(id = R.drawable.home), contentDescription = "Home", tint = Color(0,0,255), modifier = Modifier.size(24.dp))
             }
             IconButton(
-                onClick = {  },
+                onClick = { navigateFunction(LoginActivity::class.java) },
                 modifier = Modifier
                     .padding(horizontal = 10.dp, vertical = 12.dp)
             ) {
@@ -188,20 +172,16 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     companion object {
         private const val PERMISSION_REQUEST_CODE = 100
-        private const val REQUEST_CODE_CHOOSE_GPX = 1001
     }
     private fun loadAndParseGpxFile(fileName: String): List<GpxPoint> {
         return parseGpx(assets.open(fileName))
     }
 }
-
 data class GpxPoint(val latitude: Double, val longitude: Double)
-
 fun parseGpx(inputStream: InputStream): List<GpxPoint> {
     val points = mutableListOf<GpxPoint>()
     val factory = XmlPullParserFactory.newInstance()
     val parser = factory.newPullParser()
-
     parser.setInput(inputStream, null)
     var eventType = parser.eventType
     while (eventType != XmlPullParser.END_DOCUMENT) {
