@@ -227,7 +227,7 @@ fun MainScreenContent(navigateFunction: (Class<*>) -> Unit) {
 
             ClickableText(
                 text = AnnotatedString("Profile"),
-                onClick = { /* Action à exécuter lors du clic */ },
+                onClick = { navigateFunction(ProfileActivity::class.java) },
                 style = androidx.compose.ui.text.TextStyle(fontSize = 20.sp,
                     color = Color.Blue),
                 modifier = Modifier
