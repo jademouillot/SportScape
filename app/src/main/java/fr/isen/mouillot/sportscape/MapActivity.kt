@@ -105,7 +105,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.uiSettings.isZoomGesturesEnabled = true
 
-        val gpxPoints = loadAndParseGpxFile("test.gpx")
+        val gpxPoints = loadAndParseGpxFile("Vélo Toulon - Cassis.gpx")
         if (gpxPoints.isNotEmpty()) {
             val polylineOptions = com.google.android.gms.maps.model.PolylineOptions()
             gpxPoints.forEach { point ->
@@ -211,8 +211,3 @@ fun parseGpx(inputStream: InputStream): List<GpxPoint> {
     }
     return points
 }
-
-
-
-
-
