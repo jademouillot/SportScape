@@ -8,8 +8,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -70,12 +67,13 @@ class RegisterActivity : ComponentActivity() {
                 ) {
                     var username by remember { mutableStateOf("") }
                     var photoUrl by remember { mutableStateOf("") }
+                    var userId by remember { mutableStateOf("") }
                     val errorMessage = remember { mutableStateOf("") }
 
                     RegisterScreen(
                         currentUser = remember { mutableStateOf(null) },
-                        register = { email, password, username, photoUrl ->
-                            Register(email, password, username, photoUrl)
+                        register = { email, password, username, photoUrl, userId ->
+                            Register(email, password, username, photoUrl, userId)
                             //postdataUser("email", "password", "username", "photoUrl")
                             startActivity(MainActivity::class.java)
                         },
@@ -124,6 +122,7 @@ class RegisterActivity : ComponentActivity() {
         password: String,
         username: String,
         photoUrl: String,
+        userId: Any?,
     ) {
         if (password.isEmpty() || username.isEmpty()) {
             Log.d("Baptiste", "Veuillez remplir les champs.")
@@ -186,7 +185,7 @@ fun postdataUser(imageUrl: String) {
     @Composable
     fun RegisterScreen(
         currentUser: MutableState<FirebaseUser?>,
-        register: (String, String, String, String) -> Unit,
+        register: (String, String, String, String, Any?) -> Unit,
 
         startActivity: (Class<*>) -> Unit,
         context: Context
@@ -195,6 +194,7 @@ fun postdataUser(imageUrl: String) {
         var password by remember { mutableStateOf("") }
         var username by remember { mutableStateOf("") }
         var photoUrl by remember { mutableStateOf("") }
+        var userId by remember { mutableStateOf("") }
         var errorMessage by remember { mutableStateOf("") }
 
 
@@ -234,7 +234,7 @@ fun postdataUser(imageUrl: String) {
                         context, errorMessage, Toast.LENGTH_SHORT
                     ).show()
                 } else {
-                    register(email, password, username, photoUrl)
+                    register(email, password, username, photoUrl, userId)
                 }
             }) {
                 Text("Create account")

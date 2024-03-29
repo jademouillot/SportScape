@@ -3,6 +3,8 @@
     <string name="title_activity_new_publication">NewPublication</string>
     <string name="title_activity_profile">ProfileActivity</string>
     <string name="title_activity_modify">ModifyActivity</string>
+    <string name="texte">Texte</string>
+    <string name="title_activity_main2">MainActivity2</string>
     <string name="title_activity_map">MapActivity</string>
     <string name="title_activity_choose_gpx">ChooseGpxActivity</string>
     <string name="title_activity_email_password">EmailPasswordActivity</string>

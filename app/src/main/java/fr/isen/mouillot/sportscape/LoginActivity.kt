@@ -50,6 +50,14 @@ class LoginActivity
                 mutableStateOf(auth.currentUser)
             }
 
+            val intent = Intent(this, ModifyActivity::class.java).apply {
+                // Récupérez le nom de l'utilisateur
+                val userid = currentUser.value?.uid ?: "Unknown user"
+                // Ajoutez le nom de l'utilisateur à l'intention
+                putExtra("userid", userid)
+            }
+            //startActivity(intent)
+
             SportScapeTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
