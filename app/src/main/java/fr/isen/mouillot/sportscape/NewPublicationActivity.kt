@@ -42,17 +42,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.draw.clip
 import coil.compose.rememberImagePainter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -60,7 +60,6 @@ import com.google.firebase.storage.FirebaseStorage
 import fr.isen.mouillot.sportscape.model.Post
 import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.*
 import java.util.Date
 import java.util.UUID
 
@@ -80,42 +79,54 @@ class NewPublicationActivity : ComponentActivity() {
                         TopBar(title = "Nouvelle Publication")
                         if (currentUser != null && currentUser.email != null) {
                             DescriptionSection(
-                                postPost = { description, images, user, returnValue ->
-                                    postPost(
-                                        description,
-                                        images,
-                                        user,
-                                        returnValue as MutableState<Boolean>
-                                    )
-                                },
+                                postPost = ::postPost,
+//                                selectedPhotos = selectedPhotos, GROS DOUTE VOIR AVCE LES FILLE
                                 user = currentUser.email ?: "NO EMAIL"
                             )
                         } else {
                             Text("Vous devez être connecté pour publier un post.")
                         }
                     }
+
+//                        DescriptionSection(selectedPhotos)
                 }
             }
         }
     }
 
+
+    //    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//        if (requestCode == REQUEST_CODE_PICK_IMAGES && resultCode == RESULT_OK) {
+//            // Récupère les Uri des photos sélectionnées depuis l'intention
+//            val clipData = data?.clipData
+//            if (clipData != null) {
+//                for (i in 0 until clipData.itemCount) {
+//                    val uri = clipData.getItemAt(i).uri
+//                    this.selectedPhotos.add(uri) // Mettre à jour la variable globale avec les photos sélectionnées
+//                }
+//            } else {
+//                val uri = data?.data
+//                if (uri != null) {
+//                    selectedPhotos.add(uri) // Mettre à jour la variable globale avec les photos sélectionnées
+//                }
+//            }
+//        }
+//    }
     private fun startActivity(activity: Class<*>) {
         val intent = Intent(this, activity)
         startActivity(intent)
     }
 
-    private fun postPost(description: String, images: List<String>?, user: String, returnValue: MutableState<Boolean>) {
+    private fun postPost(description: String, images: List<String>?, userEmail: String, returnValue: MutableState<Boolean>) {
         val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef = database.getReference("posts")
-
-        val myPost = Post(
-            description = description,
-            images = mutableListOf(),
-            userId = user,
-            date = Date().time
-        )
-
         val uuid = UUID.randomUUID().toString()
+        val myPost = Post(
+            description = description, userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+            , date = Date().time, userEmail = userEmail, id = uuid, likes = 0)
+
+
 
         // Vérifiez si des images sont présentes
         if (!images.isNullOrEmpty()) {
@@ -163,6 +174,8 @@ class NewPublicationActivity : ComponentActivity() {
                 }
         }
     }
+
+
 }
 
 
@@ -299,7 +312,38 @@ fun DescriptionSection(
             }
         }
     }
+
+    if (publishSnackbarVisible.value) {
+        PublishConfirmationSnackbar(
+            context = LocalContext.current, message = "Message publié avec succès"
+        )
+    }
 }
+
+
+fun openGallery(activity: Activity) {
+    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+        addCategory(Intent.CATEGORY_OPENABLE)
+        type = "image/*"
+        putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+    }
+    val REQUEST_CODE_PICK_IMAGES = 1
+    activity.startActivityForResult(intent, REQUEST_CODE_PICK_IMAGES)
+}
+
+//fun publish(description: String, photos: List<Uri>) {
+//    // Publie la description dans la base de données Firebase
+//    val database = FirebaseDatabase.getInstance()
+//    val ref = database.getReference("publications").push()
+//    ref.child("description").setValue(description)
+//
+//    // Publie les photos dans le stockage Firebase
+//    photos.forEachIndexed { index, uri ->
+//        val storageRef =
+//            FirebaseStorage.getInstance().reference.child("images/${ref.key}/photo$index")
+//        storageRef.putFile(uri)
+//    }
+//}
 
 @Composable
 fun PublishConfirmationSnackbar(
