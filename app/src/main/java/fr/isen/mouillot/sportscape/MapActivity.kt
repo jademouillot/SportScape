@@ -14,7 +14,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -27,12 +26,12 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import android.Manifest
+import androidx.compose.ui.graphics.Color
+import android.widget.Button
 import com.google.android.gms.maps.model.LatLngBounds
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
-import kotlinx.coroutines.*
-
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
@@ -40,6 +39,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
+
+        findViewById<Button>(R.id.buttonChooseGpx).setOnClickListener {
+            val intent = Intent(this, ChooseGpxActivity::class.java)
+            startActivityForResult(intent, REQUEST_CODE_CHOOSE_GPX) // Utilisation du code de requête défini précédemment
+        }
+
 
         // Configure the ComposeView to display the ActionBar
         val actionBarComposeView = findViewById<ComposeView>(R.id.actionBarComposeView)
@@ -140,6 +145,33 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CODE_CHOOSE_GPX && resultCode == RESULT_OK && data != null) {
+            val chosenGpxFile = data.getStringExtra("chosenGpxFile") ?: return
+            // Appelle la méthode pour charger et afficher le fichier GPX sur la carte.
+            loadAndDisplayGpx(chosenGpxFile)
+        }
+    }
+
+
+
+    private fun loadAndDisplayGpx(fileName: String) {
+        val gpxPoints = loadAndParseGpxFile("gpx/$fileName")
+        if (gpxPoints.isNotEmpty()) {
+            val polylineOptions = com.google.android.gms.maps.model.PolylineOptions().apply {
+                width(5f)
+                Color(255,0,0)
+                gpxPoints.forEach { add(LatLng(it.latitude, it.longitude)) }
+            }
+            mMap.addPolyline(polylineOptions)
+            val boundsBuilder = LatLngBounds.Builder()
+            gpxPoints.forEach { boundsBuilder.include(LatLng(it.latitude, it.longitude)) }
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100))
+        }
+    }
+
 
     @Composable
     fun ActionMapBar(context: AppCompatActivity, navigateFunction: (Class<*>) -> Unit) {
@@ -186,6 +218,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     companion object {
         private const val PERMISSION_REQUEST_CODE = 100
+        private const val REQUEST_CODE_CHOOSE_GPX = 1001
     }
     private fun loadAndParseGpxFile(fileName: String): List<GpxPoint> {
         return parseGpx(assets.open(fileName))
