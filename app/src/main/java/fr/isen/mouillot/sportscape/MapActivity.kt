@@ -41,6 +41,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
 
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
+        mapFragment?.getMapAsync(this)
+
         // Configure the ComposeView to display the ActionBar
         val actionBarComposeView = findViewById<ComposeView>(R.id.actionBarComposeView)
         actionBarComposeView.setContent {
@@ -155,7 +158,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 Icon(painter = painterResource(id = R.drawable.home), contentDescription = "Home", tint = Color(0,0,255), modifier = Modifier.size(24.dp))
             }
             IconButton(
-                onClick = { navigateFunction(LoginActivity::class.java) },
+                onClick = {  },
                 modifier = Modifier
                     .padding(horizontal = 10.dp, vertical = 12.dp)
             ) {
