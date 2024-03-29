@@ -145,7 +145,7 @@ class NewPublicationActivity : ComponentActivity() {
 
             // Parcourez chaque image pour les télécharger dans Firebase Storage
             images.forEachIndexed { index, uriString ->
-//                val imageRef = storageRef.child("$uuid/image$index.jpg")
+//       //         val imageRef = storageRef.child("$uuid/image$index.jpg")
                 val imageRef = storageRef.child("$uuid.jpg")
                 val imageUri = Uri.parse(uriString)
                 val uploadTask = imageRef.putFile(imageUri)
