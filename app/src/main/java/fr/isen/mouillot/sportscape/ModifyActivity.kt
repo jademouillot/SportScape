@@ -1,5 +1,6 @@
 package fr.isen.mouillot.sportscape
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -22,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,7 +33,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import fr.isen.mouillot.sportscape.model.Post
 import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
 import java.util.concurrent.ExecutorService
 
@@ -39,6 +45,7 @@ class ModifyActivity : ComponentActivity() {
 
     private lateinit var imageCapture: ImageCapture
     private lateinit var cameraExecutor: ExecutorService
+    @SuppressLint("UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -49,8 +56,60 @@ class ModifyActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
 
+                    val userid = intent.getStringExtra("userid") ?: ""
 
-                    val (userInput1, setUserInput1) = remember { mutableStateOf("user_name") }
+                    val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+                    val reference = database.getReference("users")
+
+                    //val cleanedEmail = userName?.replace(".", "_dot_")?.replace("#", "_hash_")?.replace("$", "_dollar_") // et ainsi de suite pour les autres caractères non valides
+
+                    var userNameReal: String? = null
+                    var userKey: String = ""
+                    var userEmail: String = ""
+
+                    reference.child(userid).addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            // Vérifier si l'utilisateur existe
+                            if (snapshot.exists()) {
+                                // L'utilisateur existe, récupérer les informations de l'utilisateur
+                                userNameReal = snapshot.child("username").getValue(String::class.java)
+                                // Utilisez le nom de l'utilisateur comme bon vous semble
+                                println("Nom de l'utilisateur: $userNameReal")
+
+                                // Maintenant, vous pouvez exécuter la deuxième requête ici
+                                reference.orderByChild("username").equalTo(userNameReal).addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        for (userSnapshot in snapshot.children) {
+                                            userKey = userSnapshot.key.toString()
+                                            // Utilisez la clé de l'utilisateur ici
+                                            println("La clé de l'utilisateur est : $userKey")
+                                        }
+
+                                        if (snapshot.exists()) {
+                                            userEmail = snapshot.child("email").getValue(String::class.java) ?: ""
+                                            println("Adresse e-mail de l'utilisateur : $userEmail")
+                                        } else {
+                                            println("L'utilisateur avec l'UID $userid n'existe pas.")
+                                        }
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {
+                                        // Gérer les erreurs
+                                    }
+                                })
+                            } else {
+                                // L'utilisateur n'existe pas
+                                println("L'utilisateur avec l'email $userid n'existe pas.")
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            // Gérer les erreurs
+                            println("Erreur lors de la récupération des informations de l'utilisateur: ${error.message}")
+                        }
+                    })
+
+                    val (userInput1, setUserInput1) = remember { mutableStateOf(userNameReal ?: "user_name") }
                     val (userInput2, setUserInput2) = remember { mutableStateOf("user_description") }
 
                     Box(
@@ -93,7 +152,7 @@ class ModifyActivity : ComponentActivity() {
                             onClick = {
                                 // Utilisez la valeur de userInput comme bon vous semble
                                 Log.d("UserInput", "Texte saisi : $userInput1")
-                                postdata(userInput1)
+                                postdata(userKey, userInput1)
                                 // Afficher un toast pour indiquer que les données ont été validées
                                 Toast.makeText(
                                     applicationContext,
@@ -137,7 +196,7 @@ class ModifyActivity : ComponentActivity() {
                             onClick = {
                                 // Utilisez la valeur de userInput comme bon vous semble
                                 Log.d("UserInput", "Texte saisi : $userInput2")
-                                postdata(userInput2)
+                                postdata(userKey, userInput2)
                                 // Afficher un toast pour indiquer que les données ont été validées
                                 Toast.makeText(
                                     applicationContext,
@@ -152,29 +211,7 @@ class ModifyActivity : ComponentActivity() {
                             Text("Validate biography changes")
                         }
                     }
-                    /*
-                    Button(
-                        onClick = {
-                            // Utilisez la valeur de userInput comme bon vous semble
-                            Log.d("UserInput", "Texte saisi : $userInput1")
 
-                        }
-                    ) {
-                        Text("Valider")
-                    }
-*/
-                    /*Button(
-                        onClick = {
-                            // Utilisez la valeur de userInput comme bon vous semble
-                            //envoyer sur la database
-                        }
-                    ) {
-                        Text("Envoyer")
-                    }*/
-                    // Définir un MutableState pour stocker la valeur récupérée
-                    //val receivedValue = remember { mutableStateOf("") }
-                    //ReceivedData(receivedValue)
-                    //DisplayReceivedValue(receivedValue.value)
                 }
 
             }
@@ -187,11 +224,21 @@ class ModifyActivity : ComponentActivity() {
 }
 
 
-private fun postdata(userInput: String) {
-    val database =
-        FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
-    val myRefToWrite = database.getReference("RegisterUser").push().setValue(userInput)
-    //val myRefToRead = database.getReference("tmp").get()
+private fun postdata(key: String, newdata : String) {
+
+    val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+    val myRef = database.getReference("tmp")
+
+// Supposez que vous avez la clé de l'élément que vous souhaitez mettre à jour
+    val key = "clé_de_l'élément"
+
+// Obtenez une référence à l'élément que vous souhaitez mettre à jour en utilisant sa clé
+    val elementRef = myRef.child(key)
+
+// Mettez à jour les données de l'élément
+    //val newData =
+    //elementRef.setValue(newData) // Pour remplacer complètement les données de l'élément
+
 }
 
 
