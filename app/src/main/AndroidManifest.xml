@@ -2,16 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
-    <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.flash"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
-
-
-
-
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -26,6 +29,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SportScape"
         tools:targetApi="31">
+        <activity
+            android:name=".DetailPostActivity"
+            android:exported="false"
+            android:label="@string/title_activity_detail_post"
+            android:theme="@style/Theme.SportScape" />
         <activity
             android:name=".MapActivity"
             android:exported="false"
@@ -46,7 +54,6 @@
             android:exported="false"
             android:label="@string/title_activity_register"
             android:theme="@style/Theme.SportScape" />
-
         <activity
             android:name=".NewPublicationActivity"
             android:exported="true"
@@ -70,9 +77,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCX-O9vG1ZClbrbXS6YHOgySGiIWCPLvjM"/>
+            android:value="AIzaSyCX-O9vG1ZClbrbXS6YHOgySGiIWCPLvjM" />
     </application>
 
 </manifest>

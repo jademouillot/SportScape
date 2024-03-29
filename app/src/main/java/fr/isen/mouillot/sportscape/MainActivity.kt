@@ -262,47 +262,72 @@ fun MainScreenContent(
                     val userName = remember { mutableStateOf("") }
                     var currentComment by remember { mutableStateOf("") } // Add this line
 
-
                     getUserfromuuid(post.userEmail, userName)
 
-                    if (userName.value.isNotEmpty()) { // Check if userName is not empty
 
-                        Text(
-                            text = "Post by: ${userName.value}: \nDescription : ${post.description}\nPosted ${
-                                getTimeAgo(
-                                    post.date
+
+
+                        if (userName.value.isNotEmpty()) { // Check if userName is not empty
+
+                            Box(modifier = Modifier.clickable {
+                                // Create an Intent to start DetailPostActivity
+                                val intent = Intent(context, DetailPostActivity::class.java)
+                                // Pass the post ID or any other data to DetailPostActivity
+                                intent.putExtra("postId", post.id)
+                                // Start DetailPostActivity
+                                startActivity(DetailPostActivity::class.java)
+                            }) {
+                                Text(
+                                text = "Post by: ${userName.value}: \nDescription : ${post.description}\nPosted ${
+                                    getTimeAgo(
+                                        post.date
+                                    )
+                                }", modifier = Modifier.padding(8.dp)
+                            )
+                        }
+
+                        Row {
+                            IconButton(onClick = {
+                                addLike(post.id, post.likes + 1) // Update this line
+                            }) { // Update likes properly
+                                Icon(
+                                    Icons.Filled.Favorite,
+                                    contentDescription = "like",
+                                    tint = Color.Red
                                 )
-                            }", modifier = Modifier.padding(8.dp)
-                        )
-                    }
+                            }
+                            Text(text = "${post.likes} likes")
 
-                    Row {
-                        IconButton(onClick = {
-                            addLike(post.id, post.likes + 1) // Update this line
-                        }) { // Update likes properly
-                            Icon(
-                                Icons.Filled.Favorite, contentDescription = "like", tint = Color.Red
+                            IconButton(onClick = {
+                                addComment(
+                                    post.id,
+                                    currentComment,
+                                    username
+                                )
+                            }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.comment),
+                                    contentDescription = "Comment",
+                                    tint = Color.Blue
+                                )
+                            }
+                            Text(text = currentComment) // Add this line
+                        }
+                        Text(text = "Comments:")
+                        post.comments.forEach { comment ->
+                            Text(text = "${comment.username} replied: ${comment.comment}")
+                        }
+
+
+
+                        CommentInput(post.id) { postId, comment ->
+                            addComment(
+                                postId,
+                                comment,
+                                username
                             )
                         }
-                        Text(text = "${post.likes} likes")
-
-                        IconButton(onClick = { addComment(post.id, currentComment, username) }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.comment),
-                                contentDescription = "Comment",
-                                tint = Color.Blue
-                            )
-                        }
-                        Text(text = currentComment) // Add this line
                     }
-                    Text(text = "Comments:")
-                    post.comments.forEach { comment ->
-                        Text(text = "${comment.username} replied: ${comment.comment}")
-                    }
-
-
-
-                    CommentInput(post.id) { postId, comment -> addComment(postId, comment, username)}
                 }
             }
         }
