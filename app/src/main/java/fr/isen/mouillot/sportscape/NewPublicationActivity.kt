@@ -282,21 +282,3 @@ fun DescriptionSection(
         }
     }
 }
-
-@Composable
-fun PublishConfirmationSnackbar(
-    context: Context, message: String, duration: Int = 1000
-) {
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(Unit) {
-        snackbarHostState.showSnackbar(message)
-        delay(duration.toLong())
-        val intent = Intent(context, MainActivity::class.java)
-        context.startActivity(intent)
-    }
-
-    Box {
-        SnackbarHost(snackbarHostState)
-    }
-}
