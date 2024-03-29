@@ -132,7 +132,7 @@ class RegisterActivity : ComponentActivity() {
         Log.d("Baptiste", "createUserWithEmail:$email")
         val database =
             FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
-        val myRef = database.getReference("tmp").push()
+        val myRef = database.getReference("user").push()
 
         val user = User(username, email, photoUrl)
 
@@ -156,7 +156,7 @@ class RegisterActivity : ComponentActivity() {
     fun postdata() {
         val database =
             FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
-        val myRef = database.getReference("tmp").push().setValue("Hello, Worldddd!")
+        val myRef = database.getReference("user").push().setValue("Hello, Worldddd!")
 
         //myRef.setValue("Hello, World!")
 
@@ -166,7 +166,7 @@ class RegisterActivity : ComponentActivity() {
 
 fun postdataUser(imageUrl: String) {
     val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
-    val myRef = database.getReference("users").push()
+    val myRef = database.getReference("user").push()
 
     val user = hashMapOf(
         "imageUrl" to imageUrl
