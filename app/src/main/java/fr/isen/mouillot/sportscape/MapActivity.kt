@@ -27,6 +27,11 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import android.Manifest
+import com.google.android.gms.maps.model.LatLngBounds
+import fr.isen.mouillot.sportscape.GpxPoint
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserFactory
+import java.io.InputStream
 
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -46,21 +51,41 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         // Configuration initiale et demande de permissions
         // Votre code actuel ici
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), PERMISSION_REQUEST_CODE)
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                PERMISSION_REQUEST_CODE
+            )
         } else {
-            val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
+            val mapFragment =
+                supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
             mapFragment?.getMapAsync(this)
         }
     }
 
     // Assurez-vous de surcharger onRequestPermissionsResult pour gérer le résultat de la demande de permission
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Si la permission est accordée, vous pouvez appeler getMapAsync ici
-                val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
+                val mapFragment =
+                    supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
                 mapFragment?.getMapAsync(this)
             } else {
                 // Gérer le cas où la permission est refusée
@@ -71,6 +96,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+
         val school = LatLng(43.12061856356527, 5.938851591473798)
         mMap.addMarker(MarkerOptions().position(school).title("Marker at ISEN"))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(school, 10f))
@@ -78,7 +104,37 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.setMaxZoomPreference(20f)
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.uiSettings.isZoomGesturesEnabled = true
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+        val gpxPoints = loadAndParseGpxFile("test.gpx")
+        if (gpxPoints.isNotEmpty()) {
+            val polylineOptions = com.google.android.gms.maps.model.PolylineOptions()
+            gpxPoints.forEach { point ->
+                polylineOptions.add(LatLng(point.latitude, point.longitude))
+            }
+            mMap.addPolyline(polylineOptions)
+        }
+
+        if (gpxPoints.isNotEmpty()) {
+            val builder = LatLngBounds.Builder()
+            gpxPoints.forEach { point ->
+                builder.include(LatLng(point.latitude, point.longitude))
+            }
+            val bounds = builder.build()
+
+            // Ajustez selon la taille de votre vue de carte
+            val padding = 100 // en pixels
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
+        }
+
+
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             mMap.isMyLocationEnabled = true
             mMap.uiSettings.isMyLocationButtonEnabled = true
         }
@@ -131,4 +187,32 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     companion object {
         private const val PERMISSION_REQUEST_CODE = 100
     }
+    private fun loadAndParseGpxFile(fileName: String): List<GpxPoint> {
+        return parseGpx(assets.open(fileName))
+    }
 }
+
+data class GpxPoint(val latitude: Double, val longitude: Double)
+
+fun parseGpx(inputStream: InputStream): List<GpxPoint> {
+    val points = mutableListOf<GpxPoint>()
+    val factory = XmlPullParserFactory.newInstance()
+    val parser = factory.newPullParser()
+
+    parser.setInput(inputStream, null)
+    var eventType = parser.eventType
+    while (eventType != XmlPullParser.END_DOCUMENT) {
+        if (eventType == XmlPullParser.START_TAG && (parser.name == "trkpt" || parser.name == "wpt")) {
+            val lat = parser.getAttributeValue(null, "lat").toDouble()
+            val lon = parser.getAttributeValue(null, "lon").toDouble()
+            points.add(GpxPoint(lat, lon))
+        }
+        eventType = parser.next()
+    }
+    return points
+}
+
+
+
+
+

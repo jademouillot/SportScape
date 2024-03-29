@@ -116,4 +116,7 @@ dependencies {
 
     implementation("androidx.appcompat:appcompat:1.6.1")
 
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+
 }
