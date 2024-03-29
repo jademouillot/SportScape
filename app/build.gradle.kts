@@ -16,6 +16,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        vectorDrawables.useSupportLibrary = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -55,6 +56,9 @@ android {
 dependencies {
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+
+
     implementation (libs.coil.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -71,9 +75,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    //noinspection UseTomlInstead
+    implementation("androidx.compose.material:material-icons-extended")
+
+
+
+
     // Import the Firebase BoM
     implementation(platform(libs.firebase.bom))
-
 
     // TODO: Add the dependencies for Firebase products you want to use
     // When using the BoM, don't specify versions in Firebase dependencies
