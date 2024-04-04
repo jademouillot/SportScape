@@ -131,7 +131,7 @@ class RegisterActivity : ComponentActivity() {
         Log.d("Baptiste", "createUserWithEmail:$email")
         val database =
             FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
-        val myRef = database.getReference("tmp").push()
+        val myRef = database.getReference("user").push()
 
         val user = User(username, email, photoUrl)
 
