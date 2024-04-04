@@ -444,9 +444,11 @@ fun ActionBar(context: Context, navigateFunction: (Class<*>) -> Unit) {
             )
         }
 
-        IconButton(onClick = {},
+        IconButton(onClick = {
+            val intent = Intent(context, FindActivity::class.java)
+            context.startActivity(intent)
+        },
             modifier = Modifier
-                .clickable { /*ajouter direction*/ }
                 .padding(horizontal = 10.dp, vertical = 12.dp)) {
             Icon(
                 painter = painterResource(id = R.drawable.find),
