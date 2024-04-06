@@ -162,7 +162,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 Icon(painter = painterResource(id = R.drawable.map), contentDescription = "Map", tint = Color(0,0,255), modifier = Modifier.size(24.dp))
             }
             IconButton(
-                onClick = { navigateFunction(ProfileActivity::class.java) },
+                onClick = { navigateFunction(UserProfileActivity::class.java) },
                 modifier = Modifier
                     .padding(horizontal = 10.dp, vertical = 12.dp)
             ) {

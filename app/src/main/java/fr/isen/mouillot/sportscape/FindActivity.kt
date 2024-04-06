@@ -159,7 +159,7 @@ fun ActionBarFind(navigateFunction: (Class<*>) -> Unit) {
 
         IconButton(
             onClick = {
-                navigateFunction(ProfileActivity::class.java)
+                navigateFunction(UserProfileActivity::class.java)
             }, modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp)
         ) {
             Icon(

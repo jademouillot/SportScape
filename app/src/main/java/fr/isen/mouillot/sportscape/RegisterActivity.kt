@@ -117,7 +117,7 @@ class RegisterActivity : ComponentActivity() {
         startActivity(intent)
     }
 
-    private fun Register(
+    private fun Registerfirst(
         email: String,
         password: String,
         username: String,
@@ -151,11 +151,59 @@ class RegisterActivity : ComponentActivity() {
         }
     }
 
+    private fun Register(
+        email: String,
+        password: String,
+        username: String,
+        photoUrl: String,
+        userId: Any?,
+    ) {
+        if (password.isEmpty() || username.isEmpty()) {
+            Log.d("Baptiste", "Veuillez remplir les champs.")
+            return
+        }
+        Log.d("Baptiste", "createUserWithEmail:$email")
+        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this) { task ->
+            if (task.isSuccessful) {
+                val firebaseUser = auth.currentUser
+                val uid = firebaseUser?.uid
+
+                // Vérifiez si l'UID est null
+                if (uid != null) {
+                    // Créez une référence de base pour le nœud utilisateur avec l'UID comme clé
+                    val database = FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
+                    val myRef = database.getReference("user").child(uid)
+
+                    // Créez un objet User avec les données de l'utilisateur
+                    val user = User(username, email, photoUrl)
+
+                    // Enregistrez l'utilisateur dans la base de données sous le nœud avec l'UID comme clé
+                    myRef.setValue(user).addOnCompleteListener { userCreationTask ->
+                        if (userCreationTask.isSuccessful) {
+                            Log.d("Baptiste", "User registered successfully.")
+                        } else {
+                            Log.w(TAG, "Failed to register user.", userCreationTask.exception)
+                        }
+                    }
+                } else {
+                    Log.d("Baptiste", "UID is null.")
+                }
+            } else {
+                Log.w(TAG, "createUserWithEmailAndPassword:failure", task.exception)
+                if (task.exception is FirebaseAuthUserCollisionException) {
+                    Log.d("Baptiste", "Account already exists.")
+                } else {
+                    Log.d("Baptiste", "Authentication failed.")
+                }
+            }
+        }
+    }
+
 
     fun postdata() {
         val database =
             FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
-        val myRef = database.getReference("tmp").push().setValue("Hello, Worldddd!")
+        val myRef = database.getReference("user").push().setValue("Hello, Worldddd!")
 
         //myRef.setValue("Hello, World!")
 

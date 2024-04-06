@@ -46,7 +46,7 @@ class LoginActivity
         // Initialize Firebase Auth
         auth = Firebase.auth
         setContent {
-            var currentUser = remember {
+            val currentUser = remember {
                 mutableStateOf(auth.currentUser)
             }
 
@@ -77,6 +77,18 @@ class LoginActivity
         startActivity(intent)
     }
 
+    private fun startActivity_Profile(userEmail: String) {
+        val intent = Intent(this, UserProfileActivity::class.java)
+        intent.putExtra("Email", userEmail)
+        //startActivity(intent)
+    }
+
+    private fun startActivity_Modify(userEmail: String) {
+        val intent = Intent(this, ModifyActivity::class.java)
+        intent.putExtra("Email", userEmail)
+        //startActivity(intent)
+    }
+
     private fun startActivity(activity: Class<*>) {
         val intent = Intent(this, activity)
         startActivity(intent)
@@ -96,6 +108,8 @@ class LoginActivity
                 currentUser.value = auth.currentUser
 
                 startActivity(auth.currentUser!!.email ?: "No user")
+                startActivity_Profile(auth.currentUser!!.email ?: "No user")
+                startActivity_Modify(auth.currentUser!!.email ?: "No user")
                 finish()
             } else {
                 // If sign in fails, display a message to the user.

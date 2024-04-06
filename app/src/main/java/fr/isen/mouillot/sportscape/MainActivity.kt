@@ -488,7 +488,7 @@ fun ActionBar(context: Context, navigateFunction: (Class<*>) -> Unit) {
 
         IconButton(
             onClick = {
-                val intent = Intent(context, ProfileActivity::class.java)
+                val intent = Intent(context, UserProfileActivity::class.java)
                 context.startActivity(intent)
             }, modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp)
         ) {
