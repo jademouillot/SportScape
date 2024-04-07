@@ -82,10 +82,10 @@ class ModifyActivity : ComponentActivity() {
             //GetUserfromEmail(authEmail, currentUsername)
         }
 
-        var  biography = mutableStateOf("")
+        var biography = mutableStateOf("")
         getBiography(uidUser ?: "", currentUsername, authEmail ?: "", biography)
 
-        var  photourl = mutableStateOf("")
+        var photourl = mutableStateOf("")
         getPhotoUrl(uidUser ?: "", currentUsername, authEmail ?: "", photourl)
 
         setContent {
@@ -565,7 +565,7 @@ fun ActionBarModifyProfile(navigateFunction: (Class<*>) -> Unit) {
             )
         }
 
-        IconButton(onClick = {},
+        IconButton(onClick = {FindActivity::class.java},
             modifier = Modifier
                 .padding(horizontal = 10.dp, vertical = 12.dp)) {
             Icon(

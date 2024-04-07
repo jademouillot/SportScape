@@ -84,7 +84,7 @@ implementation(libs.androidx.material)
     //noinspection UseTomlInstead
     implementation("androidx.compose.material:material-icons-extended")
     implementation (libs.coil)
-
+    implementation(libs.firebase.database)
     implementation(libs.coil.compose)
     implementation(libs.coil.compose.v151)
     implementation("io.coil-kt:coil-compose:2.1.0")

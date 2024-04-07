@@ -13,4 +13,5 @@
     <string name="title_activity_user_profil">UserProfilActivity</string>
     <string name="title_activity_user_profile">UserProfileActivity</string>
     <string name="title_activity_find">FindActivity</string>
+    <string name="title_activity_user_profile_other">UserProfile_other_Activity</string>
 </resources>

@@ -20,9 +20,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.TabRowDefaults.Divider
+import androidx.compose.material.TabRowDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,75 +37,64 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.storage.FirebaseStorage
 import fr.isen.mouillot.sportscape.model.User
 import fr.isen.mouillot.sportscape.ui.theme.SportScapeTheme
 
+class UserProfile_other_Activity : ComponentActivity() {
 
-class UserProfileActivity : ComponentActivity() {
+    private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+    private val userRef: DatabaseReference = database.getReference("user")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        var currentUsername = mutableStateOf("")
+        // Récupérer le nom d'utilisateur depuis l'intent
+        val username = intent.getStringExtra("username")
 
-        val authEmail = FirebaseAuth.getInstance().currentUser?.email
-        if (authEmail != null) {
-            Log.d("EMAIL", "Email: $authEmail")
-            GetUserfromEmail(authEmail, currentUsername)
-        }
-
-        val uidUser = FirebaseAuth.getInstance().currentUser?.uid
-        if (uidUser != null) {
-            Log.d("UID", "Uid: $uidUser")
-            //GetUserfromEmail(authEmail, currentUsername)
-        }
+        // Récupérer le nom d'utilisateur depuis l'intent
+        val uid = intent.getStringExtra("uid")
 
         var biography = mutableStateOf("")
-        getBiography(uidUser ?: "", currentUsername, authEmail ?: "", biography)
+        getBiography(uid ?: "", username, biography)
 
         var photoUrl = mutableStateOf("")
-        getphotoUrl(uidUser ?: "", currentUsername, authEmail ?: "", photoUrl)
+        getphotoUrl(uid ?: "", username, photoUrl)
 
         setContent {
             SportScapeTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color.White
-                    //color = MaterialTheme.colorScheme.background
+                    color = MaterialTheme.colorScheme.background
                 ) {
-                    //PrintInfos("Max Verstappen", ::navigateToModifyActivity)
-                    //LaunchedEffect(currentUsername.value) {
+                    //Greeting5("Android")
+
+                    //Text(text = "$username et $uid")
+
                     PrintInfos(
-                        currentUsername.value,
-                        ::navigateToModifyActivity,
-                        authEmail ?: "",
+                        username ?: "",
                         biography,
                         photoUrl
                     )
-                    //Text(text = currentUsername.value)
-                    //}
-                    ActionBarUserProfile(navigateFunction = ::startActivity)
+
+                    ActionBar_other_Activity(navigateFunction = ::startActivity)
                 }
-                postdata("John Doe", 30, "Passionate about sports and outdoor activities.")
             }
         }
-
     }
 
     fun getBiography(
         uid: String,
-        username: MutableState<String>,
-        email: String,
+        username: String?,
         biography: MutableState<String>
     ) {
         val database =
@@ -131,8 +121,7 @@ class UserProfileActivity : ComponentActivity() {
 
     fun getphotoUrl(
         uid: String,
-        username: MutableState<String>,
-        email: String,
+        username: String?,
         photoUrl: MutableState<String>
     ) {
         val database =
@@ -162,49 +151,6 @@ class UserProfileActivity : ComponentActivity() {
         startActivity(intent)
     }
 
-    fun GetUserfromEmail(email: String, returnUsername: MutableState<String>) {
-        val database =
-            FirebaseDatabase.getInstance("https://sportscape-38027-default-rtdb.europe-west1.firebasedatabase.app/")
-        val myRef = database.getReference("user") // Change "users" to "tmp"
-        myRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                for (userSnapshot in dataSnapshot.children) {
-                    val user = userSnapshot.getValue(User::class.java)
-                    Log.d("EMAIL- ici", "Email: $email")
-//                    Log.d("EMAIL", "User: $user")
-                    if (user != null) {
-                        if (user.email == email) {
-//                            val username = userSnapshot.key // Retrieve the user's ID
-                            returnUsername.value = user.username
-                            Log.d("EMAIL - GOOD", "User: $user")
-//                            Log.d("EMAIL - GOOD", "User: $user")
-                        }
-                    }
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.d(FirebaseRemoteConfig.TAG, "Failed to read value.", error.toException())
-            }
-        })
-    }
-
-    fun navigateToModifyActivity(email: String) {
-        val intent = Intent(this, ModifyActivity::class.java)
-        intent.putExtra("Email", email)
-        startActivity(intent)
-    }
-
-    private fun postdata(name: String, age: Int, bio: String) {
-        val database =
-            FirebaseDatabase.getInstance()
-        val myRefToWrite = database.getReference("RegisterUser")
-
-        val userBio = UserBio(name = name, age = age, bio = bio)
-
-        myRefToWrite.push().setValue(userBio)
-    }
-
     data class UserBio(
         val name: String,
         val age: Int,
@@ -214,8 +160,6 @@ class UserProfileActivity : ComponentActivity() {
     @Composable
     fun PrintInfos(
         username: String,
-        navigateToModifyActivity: (String) -> Unit,
-        email: String,
         biography: MutableState<String>,
         photoUrl: MutableState<String>
     ) {
@@ -335,22 +279,8 @@ class UserProfileActivity : ComponentActivity() {
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text(
-                    "Modify",
-                    modifier = Modifier
-                        .clickable { navigateToModifyActivity(email) }
-                        .border(
-                            width = 1.dp,
-                            color = Color.LightGray,
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .padding(8.dp),
-                    fontSize = 16.sp,
-                    color = Color.Gray
-                )
-
                 Text(
                     "Follow",
                     modifier = Modifier
@@ -369,7 +299,7 @@ class UserProfileActivity : ComponentActivity() {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Divider
-            Divider(color = Color.LightGray, thickness = 1.dp)
+            TabRowDefaults.Divider(color = Color.LightGray, thickness = 1.dp)
 
         }
     }
@@ -377,7 +307,23 @@ class UserProfileActivity : ComponentActivity() {
 }
 
 @Composable
-fun ActionBarUserProfile(navigateFunction: (Class<*>) -> Unit) {
+fun Greeting5(name: String, modifier: Modifier = Modifier) {
+    Text(
+        text = "Hello $name!",
+        modifier = modifier
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+    SportScapeTheme {
+        Greeting5("Android")
+    }
+}
+
+@Composable
+fun ActionBar_other_Activity(navigateFunction: (Class<*>) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
@@ -396,13 +342,9 @@ fun ActionBarUserProfile(navigateFunction: (Class<*>) -> Unit) {
             )
         }
 
-        IconButton(
-            onClick = {
-                navigateFunction(FindActivity::class.java)
-            },
+        IconButton(onClick = {FindActivity::class.java},
             modifier = Modifier
-                .padding(horizontal = 10.dp, vertical = 12.dp)
-        ) {
+                .padding(horizontal = 10.dp, vertical = 12.dp)) {
             Icon(
                 painter = painterResource(id = R.drawable.find),
                 contentDescription = "Find",
@@ -451,5 +393,3 @@ fun ActionBarUserProfile(navigateFunction: (Class<*>) -> Unit) {
         }
     }
 }
-
-
