@@ -3,6 +3,7 @@ package fr.isen.mouillot.sportscape
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -281,11 +283,14 @@ class UserProfile_other_Activity : ComponentActivity() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
+                val context = LocalContext.current
                 Text(
                     "Follow",
                     modifier = Modifier
                         // Assuming adding logic for "Follow" will be done here later
-                        .clickable { /* Follow logic goes here */ }
+                        .clickable {
+                            Toast.makeText(context, "Follow well received", Toast.LENGTH_SHORT).show()
+                        }
                         .border(
                             width = 1.dp,
                             color = Color.LightGray,
